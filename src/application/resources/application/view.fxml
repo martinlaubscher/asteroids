@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.Button?>
+<VBox alignment="CENTER" spacing="20.0" style="-fx-background-color: #00001c" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="application.Controller">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+    </padding>
+
+    <Label fx:id="welcomeText"/>
+    <Button text="Play" onAction="#onHelloButtonClick" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 72; -fx-cursor: hand"/>
+</VBox>
