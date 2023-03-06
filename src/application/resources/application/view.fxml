@@ -11,6 +11,6 @@
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
     </padding>
 
-    <Label fx:id="welcomeText"/>
-    <Button text="Play" onAction="#onHelloButtonClick" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 72; -fx-cursor: hand"/>
+    <Label fx:id="welcomeText" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 72;"/>
+    <Button fx:id="playButton" text="Play" onAction="#onButtonClick" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 72; -fx-cursor: hand"/>
 </VBox>
