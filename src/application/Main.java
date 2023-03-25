@@ -42,6 +42,7 @@ public class Main extends Application {
         Scene scene = new Scene(pane);
         stage.setTitle("Asteroids!");
         stage.setScene(scene);
+        stage.setResizable(true);
         stage.show();
 
         Map<KeyCode, Boolean> pressedKeys = new HashMap<>();

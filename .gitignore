@@ -8,3 +8,4 @@ mvnw
 mvnw.cmd
 pom.xml
 asteroids.iml
+/src/application/module-info.java
