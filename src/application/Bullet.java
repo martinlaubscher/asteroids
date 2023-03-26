@@ -2,7 +2,7 @@ package application;
 
 import javafx.scene.shape.Polygon;
 
-public abstract class Bullet extends Character {
+public class Bullet extends Character {
     private static final int SPEED = 10;
     private static final int MAXDIST = 400;
 
@@ -10,22 +10,24 @@ public abstract class Bullet extends Character {
     private int x;
 //    y-coordinate
     private int y;
-//    direction of travel
-    private int dir;
 //    distance traveled
     private int dist;
+//    flag indicating if player's bullet
+    private boolean friendly;
 
-    public Bullet(int x, int y, int dir) {
+    public Bullet(int x, int y, boolean friendly) {
         super(new Polygon(2, -2, 2, 2, -2, 2, -2, -2), x, y);
         this.x = x;
         this.y = y;
-        this.dir = dir;
         this.dist = 0;
+        this.friendly = friendly;
     }
 
-    public static int getMaxDist() {
-        return MAXDIST;
+    public void setDist(int dist) {
+        this.dist = dist;
     }
 
-
+    public int getDist() {
+        return dist;
+    }
 }
