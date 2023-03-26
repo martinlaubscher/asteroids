@@ -1,3 +1,5 @@
-.DS_Store
-/.idea
-**/.vscode/
+/.idea/
+/target/
+/src/module-info.java
+/asteroids.iml
+/JavaFX.iml
