@@ -125,6 +125,9 @@ public class Main extends Application {
                 // move the bullets
                 bullets.forEach(Character::move);
 
+                // update distance travelled
+                bullets.forEach(Bullet::setDist);
+
                 // if space is pressed and enough time has passed since the last bullet was fired, spawn new bullet based on player ship's location/rotation
                 if (pressedKeys.getOrDefault(KeyCode.SPACE, false) && now - lastPlayerBullet > 200_000_000) {
                     Bullet bullet = new Bullet((int) PlayerShip.getCharacter().getTranslateX(), (int) PlayerShip.getCharacter().getTranslateY(), true);
@@ -142,7 +145,9 @@ public class Main extends Application {
                 }
 
                 bullets.forEach(bullet -> {
-                    List<Asteroid> collisions = asteroids.stream().filter(asteroid -> asteroid.collide(bullet)).collect(Collectors.toList());
+
+                    List<Asteroid> collisions = asteroids.stream().filter(asteroid -> asteroid.collide(bullet)).toList();
+
 
                     collisions.stream().forEach(collided -> {
                         asteroids.remove(collided);
@@ -150,8 +155,21 @@ public class Main extends Application {
                     });
                 });
 
-                bullets.stream().filter(bullet -> !bullet.isAlive()).forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-                bullets.removeAll(bullets.stream().filter(bullet -> !bullet.isAlive()).collect(Collectors.toList()));
+                bullets.stream()
+                        .filter(bullet -> !bullet.isAlive())
+                        .forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
+
+                bullets.removeAll(bullets.stream()
+                        .filter(bullet -> !bullet.isAlive())
+                        .toList());
+
+                bullets.stream()
+                        .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
+                        .forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
+
+                bullets.removeAll(bullets.stream()
+                        .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
+                        .toList());
             }
         }.start();
     }
