@@ -15,6 +15,7 @@ public class Bullet extends Character {
 //    flag indicating if player's bullet
     private boolean friendly;
 
+    // constructor for a bullet
     public Bullet(int x, int y, boolean friendly) {
         super(new Polygon(2, -2, 2, 2, -2, 2, -2, -2), x, y);
         this.xSpawn = x;
@@ -23,17 +24,17 @@ public class Bullet extends Character {
         this.friendly = friendly;
     }
 
+    // setter function to set the distance the bullet has traveled
     public void setDist() {
-        // double currentX = this.getCharacter().getTranslateX();
-        // double currentY = this.getCharacter().getTranslateY();
-        // this.dist = Math.sqrt(Math.pow(currentX - xSpawn, 2) + Math.pow(currentY - ySpawn, 2));
         this.dist += SPEED;
     }
 
+    // getter function to get the distance the bullet has traveled
     public double getDist() {
         return dist;
     }
 
+    // getter function to get the MAXDISTANCE value of the Bullet class
     public static double getMAXDIST() {
         return MAXDIST;
     }
