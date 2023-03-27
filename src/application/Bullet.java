@@ -24,6 +24,7 @@ public class Bullet extends Character {
         this.friendly = friendly;
     }
 
+
     // setter function to set the distance the bullet has traveled
     public void setDist() {
         this.dist += SPEED;

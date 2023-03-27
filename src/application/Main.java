@@ -124,6 +124,7 @@ public class Main extends Application {
 
                 // move the bullets
                 bullets.forEach(Character::move);
+
                 // update distance travelled
                 bullets.forEach(Bullet::setDist);
 
@@ -144,7 +145,9 @@ public class Main extends Application {
                 }
 
                 bullets.forEach(bullet -> {
+
                     List<Asteroid> collisions = asteroids.stream().filter(asteroid -> asteroid.collide(bullet)).toList();
+
 
                     collisions.stream().forEach(collided -> {
                         asteroids.remove(collided);
