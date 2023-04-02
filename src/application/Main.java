@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 import javafx.application.Application;
+import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
@@ -108,12 +109,17 @@ public class Main extends Application {
                     // if the enemy ship is alive, shoot a bullet every 10 seconds
                     if (EnemyShip.isAlive() && now - lastEnemyBullet > 10_000_000_000L) {
                         Bullet bullet = new Bullet((int) EnemyShip.getCharacter().getTranslateX(), (int) EnemyShip.getCharacter().getTranslateY(), false);
-                        // use player ship's location to determine direction of fire
+
+                        // calculate the direction to fire in - 'target' represents a vector pointing from the enemy ship to the player ship
+                        double targetX = PlayerShip.getCharacter().getTranslateX() - EnemyShip.getCharacter().getTranslateX();
+                        double targetY = PlayerShip.getCharacter().getTranslateY() - EnemyShip.getCharacter().getTranslateY();
+                        Point2D target = new Point2D(targetX, targetY);
+
                         bullets.add(bullet);
 
                         // send bullet on its path
                         bullet.accelerate();
-                        bullet.setMovement(bullet.getMovement().normalize().multiply(3));
+                        bullet.setMovement(target.normalize().multiply(3));
 
                         pane.getChildren().add(bullet.getCharacter());
 
