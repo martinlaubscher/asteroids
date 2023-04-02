@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import javafx.application.Application;
 import javafx.geometry.Point2D;
@@ -45,6 +44,9 @@ public class Main extends Application {
 
         // list storing all (active) bullets
         List<Bullet> bullets = new ArrayList<>();
+
+        // list storing all (active) characters
+        List<Character> characters = new ArrayList<>();
 
         pane.getChildren().add(PlayerShip.getCharacter());
         EnemyShips.forEach(EnemyShip -> pane.getChildren().add(EnemyShip.getCharacter()));
@@ -100,12 +102,6 @@ public class Main extends Application {
 
                 // enemy ship behaviour
                 EnemyShips.forEach(EnemyShip -> {
-                    if (PlayerShip.collide(EnemyShip)) {
-                        // stop();
-                        // TODO on collision, both ships are destroyed (player ship: need to deduct life, respawn etc.)
-                        PlayerShip.decrementLives();
-
-                    }
                     // if the enemy ship is alive, shoot a bullet every 10 seconds
                     if (EnemyShip.isAlive() && now - lastEnemyBullet > 10_000_000_000L) {
                         Bullet bullet = new Bullet((int) EnemyShip.getCharacter().getTranslateX(), (int) EnemyShip.getCharacter().getTranslateY(), false);
@@ -128,21 +124,18 @@ public class Main extends Application {
                     }
                 });
 
-                // move the bullets
-                bullets.forEach(Character::move);
-
-                // update distance travelled
-                bullets.forEach(Bullet::setDist);
-
                 // if space is pressed and enough time has passed since the last bullet was fired, spawn new bullet based on player ship's location/rotation
                 if (pressedKeys.getOrDefault(KeyCode.SPACE, false) && now - lastPlayerBullet > 200_000_000) {
                     Bullet bullet = new Bullet((int) PlayerShip.getCharacter().getTranslateX(), (int) PlayerShip.getCharacter().getTranslateY(), true);
                     bullet.getCharacter().setRotate(PlayerShip.getCharacter().getRotate());
                     bullets.add(bullet);
 
-                    // send bullet on its path
+                    // accelerate bullet
                     bullet.accelerate();
+                    // move bullet based on ship's rotation
                     bullet.setMovement(bullet.getMovement().normalize().multiply(3));
+                    // add ship's momentum to bullet trajectory
+                    bullet.setMovement(bullet.getMovement().add(PlayerShip.getMovement()));
 
                     pane.getChildren().add(bullet.getCharacter());
 
@@ -150,32 +143,112 @@ public class Main extends Application {
                     lastPlayerBullet = now;
                 }
 
-                bullets.forEach(bullet -> {
+                // move the bullets
+                bullets.forEach(Character::move);
 
-                    List<Asteroid> collisions = asteroids.stream().filter(asteroid -> asteroid.collide(bullet)).toList();
+                // update distance travelled
+                bullets.forEach(Bullet::setDist);
 
+                // removing bullets that have exceeded MAXDIST
+                bullets.stream()
+                        .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
+                        .forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
 
-                    collisions.stream().forEach(collided -> {
-                        asteroids.remove(collided);
-                        pane.getChildren().remove(collided.getCharacter());
-                    });
+                bullets.removeAll(bullets.stream()
+                        .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
+                        .toList());
+
+                // repopulating list containing all characters
+                characters.clear();
+                characters.addAll(bullets);
+                characters.addAll(asteroids);
+                characters.addAll(EnemyShips);
+                characters.add(PlayerShip);
+
+                // calling method checking collisions
+                collisions();
+
+                // removing characters marked as dead by the collisions method
+                hearseMultiple(bullets,asteroids,EnemyShips);
+
+            }
+
+            /**
+             * Takes a list of characters and removes the characters that aren't alive - much like a hearse.
+             * @param list The list of characters to check.
+             */
+            private <T extends Character> void hearse(List<T> list) {
+                list.stream()
+                        .filter(character -> !character.isAlive())
+                        .forEach(character -> pane.getChildren().remove(character.getCharacter()));
+
+                list.removeAll(list.stream()
+                        .filter(character -> !character.isAlive())
+                        .toList());
+            }
+
+            /**
+             * Helper method for 'hearse'. Takes a list of lists and calls 'hearse' for each of them.
+             * @param lists The list of lists to check.
+             */
+            @SafeVarargs
+            private void hearseMultiple(List<? extends Character>... lists) {
+                for (List<? extends Character> list : lists) {
+                    hearse(list);
+                }
+            }
+
+            /**
+             * Checks and handles collisions between characters
+             */
+            public void collisions() {
+                characters.forEach(character -> {
+                    for (Character otherCharacter : characters) {
+                        // check that collision happens with other character & not with itself
+                        if (otherCharacter != character && character.collide(otherCharacter)) {
+                            switch (character.getClass().getSimpleName()) {
+                                // collision handling for player ship
+                                case "PlayerShip" -> {
+                                    // ignoring friendly fire
+                                    if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
+                                        ((PlayerShip) character).decrementLives();
+                                    }
+                                }
+                                // collision handling for enemy ships
+                                case "EnemyShip" -> {
+                                    // ignoring friendly fire
+                                    if (!(otherCharacter instanceof Bullet) || ((Bullet) otherCharacter).isFriendly()) {
+                                        character.setAlive(false);
+                                    }
+                                }
+                                // collision handling for asteroids
+                                case "Asteroid" -> {
+                                    // ignoring collisions with other asteroids
+                                    if (!(otherCharacter instanceof Asteroid)) {
+                                        // TODO implement handling of asteroids (split/destroy)
+                                        character.setAlive(false);
+                                    }
+                                }
+                                // collision handling for bullets
+                                case "Bullet" -> {
+                                    // collision handling for friendly bullets
+                                    if (((Bullet) character).isFriendly()) {
+                                        // ignoring friendly fire
+                                        if (otherCharacter != PlayerShip) {
+                                            character.setAlive(false);
+                                        }
+                                    // collision handling for enemy bullets
+                                    } else {
+                                        // ignoring friendly fire
+                                        if (!(otherCharacter instanceof EnemyShip)) {
+                                            character.setAlive(false);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 });
-
-                bullets.stream()
-                        .filter(bullet -> !bullet.isAlive())
-                        .forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-
-                bullets.removeAll(bullets.stream()
-                        .filter(bullet -> !bullet.isAlive())
-                        .toList());
-
-                bullets.stream()
-                        .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
-                        .forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-
-                bullets.removeAll(bullets.stream()
-                        .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
-                        .toList());
             }
         }.start();
     }
