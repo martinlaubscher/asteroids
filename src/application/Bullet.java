@@ -3,7 +3,7 @@ package application;
 import javafx.scene.shape.Polygon;
 
 public class Bullet extends Character {
-    private static final int SPEED = 3;
+    private static final int SPEED = 4;
     private static final double MAXDIST = 350;
     // flag indicating if player bullet
     private final boolean friendly;

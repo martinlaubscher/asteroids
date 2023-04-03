@@ -8,7 +8,6 @@ public abstract class Character {
     private Polygon character;
     public Point2D movement;
     private Boolean alive;
-    private double distanceTravelled;
 
     public Character(Polygon polygon, int x, int y) {
         this.character = polygon;
@@ -35,19 +34,19 @@ public abstract class Character {
         this.character.setTranslateY(this.character.getTranslateY() + this.movement.getY());
     
         if (this.character.getTranslateX() < 0) {
-            this.character.setTranslateX(this.character.getTranslateX() + Main.WIDTH);
+            this.character.setTranslateX(this.character.getTranslateX() + GameController.WIDTH);
         }
     
-        if (this.character.getTranslateX() > Main.WIDTH) {
-            this.character.setTranslateX(this.character.getTranslateX() % Main.WIDTH);
+        if (this.character.getTranslateX() > GameController.WIDTH) {
+            this.character.setTranslateX(this.character.getTranslateX() % GameController.WIDTH);
         }
     
         if (this.character.getTranslateY() < 0) {
-            this.character.setTranslateY(this.character.getTranslateY() + Main.HEIGHT);
+            this.character.setTranslateY(this.character.getTranslateY() + GameController.HEIGHT);
         }
     
-        if (this.character.getTranslateY() > Main.HEIGHT) {
-            this.character.setTranslateY(this.character.getTranslateY() % Main.HEIGHT);
+        if (this.character.getTranslateY() > GameController.HEIGHT) {
+            this.character.setTranslateY(this.character.getTranslateY() % GameController.HEIGHT);
         }
     }
 
@@ -91,8 +90,5 @@ public abstract class Character {
 		return this.alive;
 	}
 	// Get distance travelled
-	public double getDistanceTravelled() {
-		return this.distanceTravelled;
-		}
 
 }
