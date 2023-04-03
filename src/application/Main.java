@@ -42,10 +42,10 @@ public class Main extends Application {
            EnemyShip EnemyShip = new EnemyShip((rnd.nextInt(WIDTH)), (rnd.nextInt(HEIGHT)));
            EnemyShips.add(EnemyShip);
         }
-        pane.getChildren().add(playerShip.getCharacter());
         EnemyShips.forEach(EnemyShip -> pane.getChildren().add(EnemyShip.getCharacter()));
         
-        // Creates arrays to store asteroids of different sizes
+        // Creates an array to store asteroids of different sizes
+
         List<Asteroid> largeAsteroids = new ArrayList<>();
 		List<Asteroid> medAsteroids = new ArrayList<>();
 		List<Asteroid> smallAsteroids = new ArrayList<>();
@@ -58,10 +58,9 @@ public class Main extends Application {
 			Random rnd = new Random();
 			Asteroid asteroid = new Asteroid(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT), Size.LARGE);
 			largeAsteroids.add(asteroid);
-			
 		}
         
-        // Adds large asteroids to the pane
+        // Adds the large asteroid to the pane
         largeAsteroids.forEach(asteroid -> pane.getChildren().add(asteroid.getCharacter()));
 
         Scene scene = new Scene(pane);
@@ -105,7 +104,7 @@ public class Main extends Application {
                 bullets.forEach(bullet -> bullet.move());
                 largeAsteroids.forEach(asteroid -> asteroid.move());
                 medAsteroids.forEach(asteroid -> asteroid.move());
-		        smallAsteroids.forEach(asteroid -> asteroid.move());
+                smallAsteroids.forEach(asteroid -> asteroid.move());
                 
                 EnemyShips.forEach(EnemyShip -> EnemyShip.accelerate());
 
@@ -208,8 +207,8 @@ public class Main extends Application {
                 
                 // Remove dead items
                 removeDeadAsteroids(largeAsteroids);
-		        removeDeadAsteroids(medAsteroids);
-		        removeDeadAsteroids(smallAsteroids);
+                removeDeadAsteroids(medAsteroids);
+                removeDeadAsteroids(smallAsteroids);
             }
         }.start();
     }
@@ -253,7 +252,7 @@ public class Main extends Application {
 		 Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(), (int) asteroid.getCharacter().getTranslateY(), newSize);
 		 asteroids.add(newAsteroid);
 		 pane.getChildren().add(newAsteroid.getCharacter());
+        }
 	 }
  }
    
-}

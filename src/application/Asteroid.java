@@ -5,7 +5,7 @@ import java.util.Random;
 public class Asteroid extends Character {
 
     private double rotationalMovement;
-    private Size size;
+    public Size size;
     private double scaler;
     private double accelerationAmount;
 
@@ -31,7 +31,7 @@ public class Asteroid extends Character {
     	return this.size;
     }
 
-    private final void setSize() {
+    public final void setSize() {
     	if (this.size == Size.LARGE) {
     		this.scaler = 3.0;
     	} else if (this.size == Size.MEDIUM) {
@@ -46,7 +46,7 @@ public class Asteroid extends Character {
     	}
     }
 
-    private void setSpeed(Random rnd) {
+    public void setSpeed(Random rnd) {
     	if (this.size == Size.LARGE) {
     		this.accelerationAmount = 20.0 + rnd.nextDouble() * 10.0;
     	} else if (this.size == Size.MEDIUM) {
@@ -62,7 +62,7 @@ public class Asteroid extends Character {
     	}
     }
     
-    private final void setDirection(Random rnd) {
+    public final void setDirection(Random rnd) {
     	super.getCharacter().setRotate(rnd.nextInt(360));
     }
     
