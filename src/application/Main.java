@@ -17,9 +17,9 @@ import javafx.animation.AnimationTimer;
 public class Main extends Application {
     public static int WIDTH = 600;
     public static int HEIGHT = 400;
-	public Pane pane = new Pane();
-	// Adds currentLevel to implement level progression
-	private int currentLevel;
+    public Pane pane = new Pane();
+    // Adds currentLevel to implement level progression
+    private int currentLevel;
 
     public static void main(String[] args) {
         launch(args);
@@ -29,8 +29,8 @@ public class Main extends Application {
 
     public void start(Stage stage) throws Exception{
 
-    	// Initializes currentLevel as 1
-    	currentLevel = 1;
+        // Initializes currentLevel as 1
+        currentLevel = 1;
 
         pane.setPrefSize(600, 400);
 
@@ -42,31 +42,31 @@ public class Main extends Application {
            EnemyShip EnemyShip = new EnemyShip((rnd.nextInt(WIDTH)), (rnd.nextInt(HEIGHT)));
            EnemyShips.add(EnemyShip);
         }
-        pane.getChildren().add(playerShip.getCharacter());
+        // pane.getChildren().add(playerShip.getCharacter());
         EnemyShips.forEach(EnemyShip -> pane.getChildren().add(EnemyShip.getCharacter()));
 
         // Creates arrays to store asteroids of different sizes
         List<Asteroid> largeAsteroids = new ArrayList<>();
-		List<Asteroid> medAsteroids = new ArrayList<>();
-		List<Asteroid> smallAsteroids = new ArrayList<>();
+        List<Asteroid> medAsteroids = new ArrayList<>();
+        List<Asteroid> smallAsteroids = new ArrayList<>();
         List<Asteroid> asteroids = new ArrayList<>();
 
-		// Creates an array to store playerBullets
-		List<Bullet> bullets = new ArrayList<>();
+        // Creates an array to store playerBullets
+        List<Bullet> bullets = new ArrayList<>();
 
         // list storing all (active) characters
         List<Character> characters = new ArrayList<>();
 
-		// For level i, creates i large asteroids at the beginning
-		for (int i = 0; i < currentLevel; i++) {
-			Random rnd = new Random();
-			Asteroid asteroid = new Asteroid(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT), Size.LARGE);
-			largeAsteroids.add(asteroid);
+        // For level i, creates i large asteroids at the beginning
+        for (int i = 0; i < currentLevel; i++) {
+            Random rnd = new Random();
+            Asteroid asteroid = new Asteroid(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT), Size.LARGE);
+            asteroids.add(asteroid);
 
-		}
+        }
 
         // Adds large asteroids to the pane
-        largeAsteroids.forEach(asteroid -> pane.getChildren().add(asteroid.getCharacter()));
+        asteroids.forEach(asteroid -> pane.getChildren().add(asteroid.getCharacter()));
 
         Scene scene = new Scene(pane);
         stage.setTitle("Asteroids!");
@@ -134,7 +134,7 @@ public class Main extends Application {
 
                         // update timestamp when last bullet was fired
                         lastEnemyBullet = now;
-					}
+                    }
                 });
 
                 // if space is pressed and enough time has passed since the last bullet was fired, spawn new bullet based on player ship's location/rotation
@@ -228,13 +228,27 @@ public class Main extends Application {
                 }
             }
 
-            // Method for splitting a asteroid into two asteroids
-            public void splitAsteroids(Asteroid asteroid, Size newSize, List<Asteroid> asteroids) {
-                for (int i = 0; i < 2; i++) {
-                    Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(), (int) asteroid.getCharacter().getTranslateY(), newSize);
-                    asteroids.add(newAsteroid);
-                    pane.getChildren().add(newAsteroid.getCharacter());
+            // Method for splitting an asteroid into two asteroids
+            /**
+             * Helper method for 'hearse'. Takes a list of lists and calls 'hearse' for each of them.
+             * @param asteroid The asteroid to handle.
+             * @param asteroids The list containing all asteroids.
+             */
+            public void splitAsteroids(Asteroid asteroid, List<Asteroid> asteroids) {
+                if(asteroid.getSize() == Size.LARGE) {
+                    for (int i = 0; i < 2; i++) {
+                        Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(), (int) asteroid.getCharacter().getTranslateY(), Size.MEDIUM);
+                        asteroids.add(newAsteroid);
+                        pane.getChildren().add(newAsteroid.getCharacter());
+                    }
+                } else if (asteroid.getSize() == Size.MEDIUM) {
+                    for (int i = 0; i < 2; i++) {
+                        Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(), (int) asteroid.getCharacter().getTranslateY(), Size.SMALL);
+                        asteroids.add(newAsteroid);
+                        pane.getChildren().add(newAsteroid.getCharacter());
+                    }
                 }
+                asteroid.setAlive(false);
             }
 
             /**
@@ -265,8 +279,8 @@ public class Main extends Application {
                                 case "Asteroid" -> {
                                     // ignoring collisions with other asteroids
                                     if (!(otherCharacter instanceof Asteroid)) {
-                                        // TODO implement handling of asteroids (split/destroy)
                                         character.setAlive(false);
+                                        splitAsteroids((Asteroid) character, asteroids);
                                     }
                                 }
                                 // collision handling for bullets
@@ -274,7 +288,7 @@ public class Main extends Application {
                                     // collision handling for friendly bullets
                                     if (((Bullet) character).isFriendly()) {
                                         // ignoring friendly fire
-                                        if (otherCharacter != PlayerShip) {
+                                        if (otherCharacter != playerShip) {
                                             character.setAlive(false);
                                         }
                                     // collision handling for enemy bullets
