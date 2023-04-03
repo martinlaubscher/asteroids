@@ -8,6 +8,7 @@ public abstract class Character {
     private Polygon character;
     public Point2D movement;
     private Boolean alive;
+    private double distanceTravelled;
 
     public Character(Polygon polygon, int x, int y) {
         this.character = polygon;
@@ -89,5 +90,9 @@ public abstract class Character {
 	public Boolean isAlive() {
 		return this.alive;
 	}
+	// Get distance travelled
+	public double getDistanceTravelled() {
+		return this.distanceTravelled;
+		}
 
 }
