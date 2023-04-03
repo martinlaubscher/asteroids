@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import javafx.application.Application;
+import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
@@ -26,12 +26,12 @@ public class Main extends Application {
     }
 
     @Override
-    
+
     public void start(Stage stage) throws Exception{
-    	
+
     	// Initializes currentLevel as 1
     	currentLevel = 1;
-    	
+
         pane.setPrefSize(600, 400);
 
         PlayerShip playerShip = new PlayerShip(WIDTH / 2, HEIGHT / 2);
@@ -44,23 +44,27 @@ public class Main extends Application {
         }
         pane.getChildren().add(playerShip.getCharacter());
         EnemyShips.forEach(EnemyShip -> pane.getChildren().add(EnemyShip.getCharacter()));
-        
+
         // Creates arrays to store asteroids of different sizes
         List<Asteroid> largeAsteroids = new ArrayList<>();
 		List<Asteroid> medAsteroids = new ArrayList<>();
 		List<Asteroid> smallAsteroids = new ArrayList<>();
-		
+        List<Asteroid> asteroids = new ArrayList<>();
+
 		// Creates an array to store playerBullets
 		List<Bullet> bullets = new ArrayList<>();
-        
+
+        // list storing all (active) characters
+        List<Character> characters = new ArrayList<>();
+
 		// For level i, creates i large asteroids at the beginning
 		for (int i = 0; i < currentLevel; i++) {
 			Random rnd = new Random();
 			Asteroid asteroid = new Asteroid(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT), Size.LARGE);
 			largeAsteroids.add(asteroid);
-			
+
 		}
-        
+
         // Adds large asteroids to the pane
         largeAsteroids.forEach(asteroid -> pane.getChildren().add(asteroid.getCharacter()));
 
@@ -102,29 +106,29 @@ public class Main extends Application {
                     playerShip.decelerate();
                 }
                 playerShip.move();
-                bullets.forEach(bullet -> bullet.move());
-                largeAsteroids.forEach(asteroid -> asteroid.move());
-                medAsteroids.forEach(asteroid -> asteroid.move());
-		        smallAsteroids.forEach(asteroid -> asteroid.move());
-                
+
+                asteroids.addAll(smallAsteroids);
+                asteroids.addAll(medAsteroids);
+                asteroids.addAll(largeAsteroids);
+                asteroids.forEach(asteroid -> asteroid.move());
                 EnemyShips.forEach(EnemyShip -> EnemyShip.accelerate());
 
                 // enemy ship behaviour
                 EnemyShips.forEach(EnemyShip -> {
-                    if (playerShip.collide(EnemyShip)) {
-                        // stop();
-                        // TODO on collision, both ships are destroyed (player ship: need to deduct life, respawn etc.)
-                        playerShip.decrementLives();
-                    }
-					// if the enemy ship is alive, shoot a bullet every 10 seconds
+                    // if the enemy ship is alive, shoot a bullet every 10 seconds
                     if (EnemyShip.isAlive() && now - lastEnemyBullet > 10_000_000_000L) {
                         Bullet bullet = new Bullet((int) EnemyShip.getCharacter().getTranslateX(), (int) EnemyShip.getCharacter().getTranslateY(), false);
-                        // use player ship's location to determine direction of fire
+
+                        // calculate the direction to fire in - 'target' represents a vector pointing from the enemy ship to the player ship
+                        double targetX = playerShip.getCharacter().getTranslateX() - EnemyShip.getCharacter().getTranslateX();
+                        double targetY = playerShip.getCharacter().getTranslateY() - EnemyShip.getCharacter().getTranslateY();
+                        Point2D target = new Point2D(targetX, targetY);
+
                         bullets.add(bullet);
 
                         // send bullet on its path
                         bullet.accelerate();
-                        bullet.setMovement(bullet.getMovement().normalize().multiply(3));
+                        bullet.setMovement(target.normalize().multiply(3));
 
                         pane.getChildren().add(bullet.getCharacter());
 
@@ -132,11 +136,6 @@ public class Main extends Application {
                         lastEnemyBullet = now;
 					}
                 });
-				// move the bullets
-                bullets.forEach(Character::move);
-
-                // update distance travelled
-                bullets.forEach(Bullet::setDist);
 
                 // if space is pressed and enough time has passed since the last bullet was fired, spawn new bullet based on player ship's location/rotation
                 if (pressedKeys.getOrDefault(KeyCode.SPACE, false) && now - lastPlayerBullet > 200_000_000) {
@@ -144,116 +143,153 @@ public class Main extends Application {
                     bullet.getCharacter().setRotate(playerShip.getCharacter().getRotate());
                     bullets.add(bullet);
 
-                    // send bullet on its path
+                    // accelerate bullet
                     bullet.accelerate();
+                    // move bullet based on ship's rotation
                     bullet.setMovement(bullet.getMovement().normalize().multiply(3));
+                    // add ship's momentum to bullet trajectory
+                    bullet.setMovement(bullet.getMovement().add(playerShip.getMovement()));
 
                     pane.getChildren().add(bullet.getCharacter());
 
                     // update timestamp when last bullet was fired
                     lastPlayerBullet = now;
                 }
-				bullets.forEach(bullet -> {
-	                // When the bullet hits a large asteroid, two medium asteroids are created
-	                largeAsteroids.forEach(asteroid -> {
-	                	if(bullet.collide(asteroid)) {
-	                		bullet.setAlive(false);
-	                		asteroid.setAlive(false);
-	                		splitAsteroids(asteroid, Size.MEDIUM, medAsteroids);
-	                	}
-	                });
-	                
-	                // When the bullet hits a medium asteroid, two small asteroids are created
-	                medAsteroids.forEach(asteroid -> {
-	                	if(bullet.collide(asteroid)) {
-	                		bullet.setAlive(false);
-	                		asteroid.setAlive(false);
-	                		splitAsteroids(asteroid, Size.SMALL, smallAsteroids);
-	                	}
-	                });
-	             
-	                // When the bullet hits a small asteroid, no asteroids are created
-	                smallAsteroids.forEach(asteroid -> {
-	                	if(bullet.collide(asteroid)) {
-	                		bullet.setAlive(false);
-	                		asteroid.setAlive(false);
-	                	}
-	                });
-	                
+
+                // calling method to update bullet position, distance travelled, and remove bullets if exceeding MAXDIST
+                updateBullets();
+
+                // calling method to repopulate list with active characters
+                getCharacters();
+
+                // calling method checking collisions
+                collisions();
+
+                // removing characters marked as dead by the collisions method
+                hearseMultiple(bullets,asteroids,EnemyShips);
+
+            }
+
+            /**
+             * Combines the various list containing active characters into list 'characters'.
+             */
+            private void getCharacters() {
+                // reset the list
+                characters.clear();
+
+                // add characters stored in various lists
+                characters.addAll(bullets);
+                characters.addAll(asteroids);
+                characters.addAll(EnemyShips);
+                characters.add(playerShip);
+            }
+
+            /**
+             * Moves the active bullets, updates their distance travelled, and removes them if they have travelled too far.
+             */
+            private void updateBullets() {
+                // move the bullets
+                bullets.forEach(Character::move);
+
+                // update distance travelled
+                bullets.forEach(Bullet::setDist);
+
+                // removing bullets that have exceeded MAXDIST
+                bullets.stream()
+                        .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
+                        .forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
+                bullets.removeAll(bullets.stream()
+                        .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
+                        .toList());
+            }
+
+            /**
+             * Takes a list of characters and removes the characters that aren't alive - much like a hearse.
+             * @param list The list of characters to check.
+             */
+            private <T extends Character> void hearse(List<T> list) {
+                list.stream()
+                        .filter(character -> !character.isAlive())
+                        .forEach(character -> pane.getChildren().remove(character.getCharacter()));
+
+                list.removeAll(list.stream()
+                        .filter(character -> !character.isAlive())
+                        .toList());
+            }
+
+            /**
+             * Helper method for 'hearse'. Takes a list of lists and calls 'hearse' for each of them.
+             * @param lists The list of lists to check.
+             */
+            @SafeVarargs
+            private void hearseMultiple(List<? extends Character>... lists) {
+                for (List<? extends Character> list : lists) {
+                    hearse(list);
+                }
+            }
+
+            // Method for splitting a asteroid into two asteroids
+            public void splitAsteroids(Asteroid asteroid, Size newSize, List<Asteroid> asteroids) {
+                for (int i = 0; i < 2; i++) {
+                    Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(), (int) asteroid.getCharacter().getTranslateY(), newSize);
+                    asteroids.add(newAsteroid);
+                    pane.getChildren().add(newAsteroid.getCharacter());
+                }
+            }
+
+            /**
+             * Checks and handles collisions between characters.
+             */
+            public void collisions() {
+                characters.forEach(character -> {
+                    for (Character otherCharacter : characters) {
+                        // check that collision happens with other character & not with itself
+                        if (otherCharacter != character && character.collide(otherCharacter)) {
+                            switch (character.getClass().getSimpleName()) {
+                                // collision handling for player ship
+                                case "PlayerShip" -> {
+                                    // ignoring friendly fire
+                                    if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
+                                        ((PlayerShip) character).decrementLives();
+                                        // TODO implement respawn/game over
+                                    }
+                                }
+                                // collision handling for enemy ships
+                                case "EnemyShip" -> {
+                                    // ignoring friendly fire
+                                    if (!(otherCharacter instanceof Bullet) || ((Bullet) otherCharacter).isFriendly()) {
+                                        character.setAlive(false);
+                                    }
+                                }
+                                // collision handling for asteroids
+                                case "Asteroid" -> {
+                                    // ignoring collisions with other asteroids
+                                    if (!(otherCharacter instanceof Asteroid)) {
+                                        // TODO implement handling of asteroids (split/destroy)
+                                        character.setAlive(false);
+                                    }
+                                }
+                                // collision handling for bullets
+                                case "Bullet" -> {
+                                    // collision handling for friendly bullets
+                                    if (((Bullet) character).isFriendly()) {
+                                        // ignoring friendly fire
+                                        if (otherCharacter != PlayerShip) {
+                                            character.setAlive(false);
+                                        }
+                                    // collision handling for enemy bullets
+                                    } else {
+                                        // ignoring friendly fire
+                                        if (!(otherCharacter instanceof EnemyShip)) {
+                                            character.setAlive(false);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 });
-                
-             // When the playerShip hits a large asteroid, two asteroids are created
-                largeAsteroids.forEach(asteroid -> {
-                	if(playerShip.collide(asteroid)) {
-                		asteroid.setAlive(false);
-                		splitAsteroids(asteroid, Size.MEDIUM, medAsteroids);
-                	}
-                });
-                
-                // When the playerShip hits a medium asteroid, two small asteroids are created
-                medAsteroids.forEach(asteroid -> {
-                	if(playerShip.collide(asteroid)) {
-                		asteroid.setAlive(false);
-                		splitAsteroids(asteroid, Size.SMALL, smallAsteroids);
-                	}
-                });
-         
-                
-                // When the playerShip hits a small asteroid, no asteroids are created
-                smallAsteroids.forEach(asteroid -> {
-                	if(playerShip.collide(asteroid)) {
-                		asteroid.setAlive(false);
-                	}
-                });
-                
-                // Remove dead items
-                removeDeadAsteroids(largeAsteroids);
-		        removeDeadAsteroids(medAsteroids);
-		        removeDeadAsteroids(smallAsteroids);
             }
         }.start();
     }
-	public void removeDeadBullets(List<Bullet> bullets) {
-		// Isolates bullets that have hit an asteroid
-		bullets.stream()
-			.filter(bullet -> !bullet.isAlive())
-			.forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-	
-			bullets.stream()
-			.filter(bullet -> !bullet.isAlive())
-			.forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-
-	bullets.removeAll(bullets.stream()
-			.filter(bullet -> !bullet.isAlive())
-			.toList());
-
-	bullets.stream()
-			.filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
-			.forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-
-	bullets.removeAll(bullets.stream()
-			.filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
-			.toList());
-	}
-	
-	// Method for removing dead asteroids
-	public void removeDeadAsteroids(List<Asteroid> asteroids) {
-		asteroids.stream()
-				.filter(asteroid -> !asteroid.isAlive())
-				.forEach(asteroid -> pane.getChildren().remove(asteroid.getCharacter()));
-		asteroids.removeAll(asteroids.stream()
-				.filter(asteroid -> !asteroid.isAlive())
-				.collect(Collectors.toList()));
-	}
-	
-	
- // Method for splitting a asteroid into two asteroids
- public void splitAsteroids(Asteroid asteroid, Size newSize, List<Asteroid> asteroids) {
-	 for (int i = 0; i < 2; i++) {
-		 Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(), (int) asteroid.getCharacter().getTranslateY(), newSize);
-		 asteroids.add(newAsteroid);
-		 pane.getChildren().add(newAsteroid.getCharacter());
-	 }
- }
-   
 }
