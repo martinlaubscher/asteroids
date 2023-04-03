@@ -100,7 +100,7 @@ public class GameController {
                 asteroids.forEach(Asteroid::move);
                 enemyShips.forEach(Character::accelerate);
 
-                // enemy ship behaviour
+                // enemy ship fire
                 enemyShips.forEach(EnemyShip -> {
                     // if the enemy ship is alive, shoot a bullet every 10 seconds
                     if (EnemyShip.isAlive() && now - lastEnemyBullet > 10_000_000_000L) {
@@ -215,10 +215,8 @@ public class GameController {
                 }
             }
 
-            // Method for splitting an asteroid into two asteroids
-
             /**
-             * Helper method for 'hearse'. Takes a list of lists and calls 'hearse' for each of them.
+             * Method for splitting an asteroid into two asteroids
              * @param asteroid The asteroid that might need to be split.
              */
             public void splitAsteroids(Asteroid asteroid) {
