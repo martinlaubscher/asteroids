@@ -136,6 +136,38 @@ public class Main extends Application {
                     lastPlayerBullet = now;
                 }
 
+                // calling method to update bullet position, distance travelled, and remove bullets if exceeding MAXDIST
+                updateBullets();
+
+                // calling method to repopulate list with active characters
+                getCharacters();
+
+                // calling method checking collisions
+                collisions();
+
+                // removing characters marked as dead by the collisions method
+                hearseMultiple(bullets,asteroids,EnemyShips);
+
+            }
+
+            /**
+             * Combines the various list containing active characters into list 'characters'.
+             */
+            private void getCharacters() {
+                // reset the list
+                characters.clear();
+
+                // add characters stored in various lists
+                characters.addAll(bullets);
+                characters.addAll(asteroids);
+                characters.addAll(EnemyShips);
+                characters.add(PlayerShip);
+            }
+
+            /**
+             * Moves the active bullets, updates their distance travelled, and removes them if they have travelled too far.
+             */
+            private void updateBullets() {
                 // move the bullets
                 bullets.forEach(Character::move);
 
@@ -146,24 +178,9 @@ public class Main extends Application {
                 bullets.stream()
                         .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
                         .forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-
                 bullets.removeAll(bullets.stream()
                         .filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
                         .toList());
-
-                // repopulating list containing all characters
-                characters.clear();
-                characters.addAll(bullets);
-                characters.addAll(asteroids);
-                characters.addAll(EnemyShips);
-                characters.add(PlayerShip);
-
-                // calling method checking collisions
-                collisions();
-
-                // removing characters marked as dead by the collisions method
-                hearseMultiple(bullets,asteroids,EnemyShips);
-
             }
 
             /**
@@ -192,7 +209,7 @@ public class Main extends Application {
             }
 
             /**
-             * Checks and handles collisions between characters
+             * Checks and handles collisions between characters.
              */
             public void collisions() {
                 characters.forEach(character -> {
@@ -205,6 +222,7 @@ public class Main extends Application {
                                     // ignoring friendly fire
                                     if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
                                         ((PlayerShip) character).decrementLives();
+                                        // TODO implement respawn/game over
                                     }
                                 }
                                 // collision handling for enemy ships
