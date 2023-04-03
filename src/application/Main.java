@@ -91,13 +91,6 @@ public class Main extends Application {
                 }
                 PlayerShip.move();
                 asteroids.forEach(asteroid -> asteroid.move());
-                asteroids.forEach(asteroid -> {
-                    if (PlayerShip.collide(asteroid)) {
-                        // stop();
-                        // TODO on collision with asteroid, player ship is destroyed (need to deduct life, respawn etc.). asteroid needs to behave as if hit by bullet.
-                        PlayerShip.decrementLives();
-                    }
-                });
                 EnemyShips.forEach(EnemyShip -> EnemyShip.accelerate());
 
                 // enemy ship behaviour
