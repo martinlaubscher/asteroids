@@ -1,5 +1,6 @@
-package application;
+package model;
 
+import model.Ship;
 import javafx.scene.shape.Polygon;
 
 public class PlayerShip extends Ship {

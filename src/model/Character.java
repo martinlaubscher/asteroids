@@ -1,6 +1,7 @@
-package application;
+package model;
 
 import javafx.scene.shape.Shape;
+import application.GameController;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Polygon;
 
