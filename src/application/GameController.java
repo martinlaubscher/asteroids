@@ -149,7 +149,7 @@ public class GameController {
 
 						// send bullet on its path
 						bullet.accelerate();
-						bullet.setMovement(target.normalize().multiply(4));
+						bullet.setMovement(target.normalize().multiply(Bullet.getSpeed()));
 
 						pane.getChildren().add(bullet.getCharacter());
 
@@ -169,7 +169,7 @@ public class GameController {
 					// accelerate bullet
 					bullet.accelerate();
 					// move bullet based on ship's rotation
-					bullet.setMovement(bullet.getMovement().normalize().multiply(4));
+					bullet.setMovement(bullet.getMovement().normalize().multiply(Bullet.getSpeed()));
 					// add ship's momentum to bullet trajectory
 					bullet.setMovement(bullet.getMovement().add(playerShip.getMovement()));
 
@@ -221,9 +221,9 @@ public class GameController {
 				bullets.forEach(Bullet::setDist);
 
 				// removing bullets that have exceeded MAXDIST
-				bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
+				bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMaxdist())
 						.forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-				bullets.removeAll(bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMAXDIST()).toList());
+				bullets.removeAll(bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMaxdist()).toList());
 			}
 
 			/**
@@ -240,7 +240,7 @@ public class GameController {
 			}
 
 			/**
-			 * Helper method for 'hearse'. Takes a list of lists and calls 'hearse' for each
+			 * Helper method for 'hearse'. Takes multiple lists and calls 'hearse' for each
 			 * of them.
 			 * 
 			 * @param lists The list of lists to check.
@@ -258,22 +258,14 @@ public class GameController {
 			 * @param asteroid The asteroid that might need to be split.
 			 */
 			public void splitAsteroids(Asteroid asteroid) {
-				if (asteroid.getSize() == Size.LARGE) {
+				if (asteroid.getSize() == Size.LARGE || asteroid.getSize() == Size.MEDIUM) {
 					for (int i = 0; i < 2; i++) {
 						Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
-								(int) asteroid.getCharacter().getTranslateY(), Size.MEDIUM);
-						asteroids.add(newAsteroid);
-						pane.getChildren().add(newAsteroid.getCharacter());
-					}
-				} else if (asteroid.getSize() == Size.MEDIUM) {
-					for (int i = 0; i < 2; i++) {
-						Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
-								(int) asteroid.getCharacter().getTranslateY(), Size.SMALL);
+								(int) asteroid.getCharacter().getTranslateY(), Size.values()[asteroid.getSize().ordinal()+1]);
 						asteroids.add(newAsteroid);
 						pane.getChildren().add(newAsteroid.getCharacter());
 					}
 				}
-				asteroid.setAlive(false);
 			}
 
 			/**
@@ -287,7 +279,7 @@ public class GameController {
 							switch (character.getClass().getSimpleName()) {
 							// collision handling for player ship
 							case "PlayerShip" -> {
-								// ignoring friendly fire
+								// ignoring own bullets
 								if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
 									((PlayerShip) character).decrementLives();
 									// TODO implement respawn/game over
@@ -295,7 +287,7 @@ public class GameController {
 							}
 							// collision handling for enemy ships
 							case "EnemyShip" -> {
-								// ignoring friendly fire
+								// ignoring own bullets
 								if (!(otherCharacter instanceof Bullet) || ((Bullet) otherCharacter).isFriendly()) {
 									character.setAlive(false);
 								}
