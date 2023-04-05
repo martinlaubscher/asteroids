@@ -1,0 +1,263 @@
+package application;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Scene;
+import javafx.scene.control.TextField;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
+import model.MenuButtonFeature;
+import model.MenuSubScene;
+import model.StartGameLabel;
+
+public class MenuScene {
+
+	private static final int HEIGHT = 768;
+	private static final int WIDTH = 1024;
+	private AnchorPane mainPane;
+	private Scene mainScene;
+	private Stage mainStage;
+
+	private final static int MENU_BUTTON_LENGTH = 100;
+	private final static int MENU_BUTTON_HEIGHT = 150;
+	
+	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
+	private final static String LOGO = "/resources/asteroid_logo2.png";
+
+	private TextField textBox;// cosmetic changes pending
+	private MenuButtonFeature saveButton;
+
+	private MenuSubScene helpSubscene;
+	private MenuSubScene scoreSubscene;
+	private MenuSubScene howToPlaySubscene;
+	private MenuSubScene playSubscene;
+
+	private MenuSubScene sceneToHide;
+
+	List<MenuButtonFeature> menuButtons;
+
+	public MenuScene() {
+		menuButtons = new ArrayList<>();
+		mainPane = new AnchorPane();
+		mainScene = new Scene(mainPane, WIDTH, HEIGHT);
+		mainStage = new Stage();
+		mainStage.setScene(mainScene);
+		createSubScenes();
+		CreateButtons();
+		createBackground();
+		createLogo();
+
+	}
+
+	private void showSubScene(MenuSubScene subScene) {
+		if (sceneToHide != null) {
+			sceneToHide.moveSubScene();
+		}
+
+		subScene.moveSubScene();
+		sceneToHide = subScene;
+	}
+
+	private void createSubScenes() {
+
+		helpSubscene = new MenuSubScene();
+		mainPane.getChildren().add(helpSubscene);
+		scoreSubscene = new MenuSubScene();
+		mainPane.getChildren().add(scoreSubscene);
+		howToPlaySubscene = new MenuSubScene();
+		mainPane.getChildren().add(howToPlaySubscene);
+
+		createStartGameSubscene();
+
+	}
+
+	private void createStartGameSubscene() {
+		playSubscene = new MenuSubScene();
+		mainPane.getChildren().add(playSubscene);
+
+		StartGameLabel startGameLabel = new StartGameLabel("ENTER YOUR NAME");
+		startGameLabel.setLayoutX(110);
+		startGameLabel.setLayoutY(25);
+		playSubscene.getPane().getChildren().add(startGameLabel);
+		playSubscene.getPane().getChildren().add(createTextboxForName());
+		playSubscene.getPane().getChildren().add(createButtonToStart());
+
+	}
+
+	private HBox createTextboxForName() {
+		HBox box = new HBox();
+		box.setSpacing(60);
+		textBox = new TextField();
+		saveButton = new MenuButtonFeature("SAVE");
+		saveButton.setLayoutX(50);
+		saveButton.setLayoutY(25);
+		saveButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				saveTextToFile(textBox.getText());
+			}
+		});
+		box.getChildren().addAll(textBox, saveButton);
+
+		box.setLayoutX(300 - (118 * 2));
+		box.setLayoutY(100);
+		return box;
+	}
+
+	private void saveTextToFile(String text) {
+		try {
+			File outputFile = new File("/resources/scores.txt");
+			if (!outputFile.exists()) {
+				outputFile.createNewFile();
+			}
+			FileWriter writer = new FileWriter(outputFile);
+			writer.write(text);
+			writer.close();
+		} catch (IOException e) {
+			System.err.println("Error writing to file: " + e.getMessage());
+		}
+	}
+
+	private MenuButtonFeature createButtonToStart() {
+		MenuButtonFeature startButton = new MenuButtonFeature("START");
+		startButton.setLayoutX(350);
+		startButton.setLayoutY(300);
+
+		startButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				GameController gameController = new GameController();
+				gameController.startGame();
+
+			}
+		});
+
+		return startButton;
+	}
+
+	public Stage getMainStage() {
+		return mainStage;
+	}
+
+	private void AddMenuButtons(MenuButtonFeature button) {
+		button.setLayoutX(MENU_BUTTON_LENGTH);
+		button.setLayoutY(MENU_BUTTON_HEIGHT + menuButtons.size() * 100);
+		menuButtons.add(button);
+		mainPane.getChildren().add(button);
+	}
+
+	private void CreateButtons() {
+		createStartButton();
+		createScoresButton();
+		createHowToPlayButton();
+		createExitButton();
+	}
+
+	private void createStartButton() {
+		MenuButtonFeature startButton = new MenuButtonFeature("PLAY");
+		AddMenuButtons(startButton);
+
+		startButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				showSubScene(playSubscene);
+
+			}
+		});
+	}
+
+	private void createScoresButton() {
+		MenuButtonFeature scoresButton = new MenuButtonFeature("SCORES");
+		AddMenuButtons(scoresButton);
+
+		scoresButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				showSubScene(scoreSubscene);
+
+			}
+		});
+	}
+
+	private void createHowToPlayButton() {
+
+		MenuButtonFeature creditsButton = new MenuButtonFeature("RULES");
+		AddMenuButtons(creditsButton);
+
+		creditsButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				showSubScene(howToPlaySubscene);
+
+			}
+		});
+	}
+
+	private void createExitButton() {
+		MenuButtonFeature exitButton = new MenuButtonFeature("EXIT");
+		AddMenuButtons(exitButton);
+
+		exitButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				mainStage.close();
+
+			}
+		});
+
+	}
+
+	private void createBackground() {
+		Image backgroundImage = new Image(BACKGROUND_IMAGE, 256, 256, false, false);
+		BackgroundImage background = new BackgroundImage(backgroundImage, BackgroundRepeat.REPEAT,
+				BackgroundRepeat.REPEAT, BackgroundPosition.DEFAULT, null);
+		mainPane.setBackground(new Background(background));
+	}
+
+	private void createLogo() {
+		ImageView logo = new ImageView(LOGO);
+		logo.setLayoutX(380);
+		logo.setLayoutY(50);
+
+		logo.setOnMouseEntered(new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent event) {
+				logo.setEffect(new DropShadow());
+
+			}
+		});
+
+		logo.setOnMouseExited(new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent event) {
+				logo.setEffect(null);
+
+			}
+		});
+
+		mainPane.getChildren().add(logo);
+
+	}
+}
