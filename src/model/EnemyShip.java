@@ -1,4 +1,4 @@
-package application;
+package model;
 
 import java.util.Random;
 //import javafx.geometry.Point2D;

@@ -1,6 +1,7 @@
-package application;
+package model;
 
 import javafx.scene.shape.Polygon;
+import model.Character;
 
 public class Bullet extends Character {
     private static final int SPEED = 4;

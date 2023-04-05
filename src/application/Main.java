@@ -4,14 +4,18 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-
-    public static void main(String[] args) {
-        launch(args);
-    }
-
-    @Override
-    public void start(Stage stage) throws Exception {
-        GameController gameController = new GameController(stage);
-        gameController.startGame();
-    }
+	@Override
+	public void start(Stage stage) {
+		try {
+			MenuScene menuscene = new MenuScene();
+			stage = menuscene.getMainStage();
+			stage.show();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void main(String[] args) {
+		launch(args);
+	}
 }
