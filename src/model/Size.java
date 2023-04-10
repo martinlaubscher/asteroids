@@ -1,4 +1,4 @@
-package application;
+package model;
 
 public enum Size {
 	LARGE,
