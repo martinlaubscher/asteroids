@@ -14,6 +14,9 @@ import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import model.Asteroid;
 import model.Bullet;
 import model.EnemyShip;
@@ -43,7 +46,22 @@ public class GameController {
 		scene = new Scene(gamePane, WIDTH, HEIGHT);
 		stage = new Stage();
 		stage.setScene(scene);
+	}
 
+	List<EnemyShip> enemyShips = new ArrayList<>();
+
+	private void spawnEnemyShips() {
+		Timeline enemyShipSpawner = new Timeline(
+			new KeyFrame(Duration.seconds(10)), // wait 10 seconds before spawning first enemy ship
+			new KeyFrame(Duration.seconds(20), event -> {
+				Random rnd = new Random();
+				EnemyShip enemyShip = new EnemyShip(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT));
+				pane.getChildren().add(enemyShip.getCharacter());
+				enemyShips.add(enemyShip);
+			})
+		);
+		enemyShipSpawner.setCycleCount(Timeline.INDEFINITE);
+		enemyShipSpawner.play();
 	}
 
 	/**
@@ -59,14 +77,6 @@ public class GameController {
 
 		PlayerShip playerShip = new PlayerShip(WIDTH / 2, HEIGHT / 2);
 		pane.getChildren().add(playerShip.getCharacter());
-		List<EnemyShip> enemyShips = new ArrayList<>();
-		for (int i = 0; i < 5; i++) {
-			Random rnd = new Random();
-			EnemyShip EnemyShip = new EnemyShip((rnd.nextInt(WIDTH)), (rnd.nextInt(HEIGHT)));
-			enemyShips.add(EnemyShip);
-		}
-
-		enemyShips.forEach(EnemyShip -> pane.getChildren().add(EnemyShip.getCharacter()));
 
 		// list storing all (active) asteroids
 		List<Asteroid> asteroids = new ArrayList<>();
@@ -86,6 +96,9 @@ public class GameController {
 
 		// Adds initial asteroids to the pane
 		asteroids.forEach(asteroid -> pane.getChildren().add(asteroid.getCharacter()));
+		Timeline initialEnemyShipSpawnDelay = new Timeline(new KeyFrame(Duration.seconds(10)));
+		initialEnemyShipSpawnDelay.setOnFinished(event -> spawnEnemyShips());
+		initialEnemyShipSpawnDelay.play();
 
 		Scene scene = new Scene(pane);
 		stage.setTitle("Asteroids!");
@@ -121,14 +134,17 @@ public class GameController {
 				if (pressedKeys.getOrDefault(KeyCode.UP, false)) {
 					playerShip.accelerate();
 				}
-
-				if (pressedKeys.getOrDefault(KeyCode.DOWN, false)) {
-					playerShip.decelerate();
-				}
 				playerShip.move();
 
 				asteroids.forEach(Asteroid::move);
-				enemyShips.forEach(Character::accelerate);
+				enemyShips.forEach(enemyShip -> {
+					long currentTime = System.nanoTime();
+					if (currentTime - enemyShip.getLastDirectionChange() > 1000000000000L) {
+						enemyShip.setRandomMovement();
+						enemyShip.setLastDirectionChange(currentTime);
+					}
+					enemyShip.move();
+				});
 
 				// enemy ship fire
 				enemyShips.forEach(EnemyShip -> {
