@@ -13,6 +13,10 @@ import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.control.Label;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -35,6 +39,7 @@ public class GameController {
 	private Scene scene;
 	private GridPane gamePane1;
 	private GridPane gamePane2;
+	private Label livesLabel = new Label("");
 	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
 
 	public GameController() {
@@ -46,7 +51,12 @@ public class GameController {
 		scene = new Scene(gamePane, WIDTH, HEIGHT);
 		stage = new Stage();
 		stage.setScene(scene);
+		pane.getChildren().add(livesLabel);
 	}
+
+	private void gameOver() {
+        // TODO: Implement game over logic (e.g. display game over screen, prompt to restart)
+    }
 
 	List<EnemyShip> enemyShips = new ArrayList<>();
 
@@ -77,6 +87,13 @@ public class GameController {
 
 		PlayerShip playerShip = new PlayerShip(WIDTH / 2, HEIGHT / 2);
 		pane.getChildren().add(playerShip.getCharacter());
+
+		Label livesLabel = new Label("Lives: " + playerShip.getLives());
+		livesLabel.setTextFill(Color.WHITE);
+		livesLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+		livesLabel.setTranslateX(10);
+		livesLabel.setTranslateY(10);
+		pane.getChildren().add(livesLabel);
 
 		// list storing all (active) asteroids
 		List<Asteroid> asteroids = new ArrayList<>();
@@ -286,21 +303,27 @@ public class GameController {
 
 			/**
 			 * Checks and handles collisions between characters.
-			 */
+			 */			
 			public void collisions() {
 				characters.forEach(character -> {
 					for (Character otherCharacter : characters) {
 						// check that collision happens with other character & not with itself
 						if (otherCharacter != character && character.collide(otherCharacter)) {
 							switch (character.getClass().getSimpleName()) {
-							// collision handling for player ship
-							case "PlayerShip" -> {
-								// ignoring own bullets
-								if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
-									((PlayerShip) character).decrementLives();
-									// TODO implement respawn/game over
+								// collision handling for player ship
+								case "PlayerShip" -> {
+									// ignoring own bullets
+									if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
+										playerShip.decrementLives();
+										if (playerShip.getLives() > 1) {
+											playerShip.respawn(WIDTH / 2, HEIGHT / 2);
+											break; // Prevent multiple collisions and multiple life decrements in a single frame
+										} else if (playerShip.getLives() <= 1) {
+											gameOver();
+											break; // Prevent multiple collisions and multiple life decrements in a single frame
+										}
+									}
 								}
-							}
 							// collision handling for enemy ships
 							case "EnemyShip" -> {
 								// ignoring own bullets

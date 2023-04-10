@@ -42,4 +42,5 @@ public class Bullet extends Character {
     public boolean isFriendly() {
         return friendly;
     }
+    
 }
