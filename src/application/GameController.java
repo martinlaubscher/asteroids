@@ -13,6 +13,8 @@ import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import model.Asteroid;
 import model.Bullet;
@@ -21,6 +23,8 @@ import model.PlayerShip;
 import model.Size;
 import model.Character;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class GameController {
@@ -30,8 +34,7 @@ public class GameController {
 	private Pane pane = new Pane();
 	private AnchorPane gamePane;
 	private Scene scene;
-	private GridPane gamePane1;
-	private GridPane gamePane2;
+	private MediaPlayer mediaPlayer;
 	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
 
 	public GameController() {
@@ -52,6 +55,11 @@ public class GameController {
 	public void startGame() {
 		this.stage.hide();
 		createBackground();
+		playBackgroundSound();
+		// Stop the music when the window is closed
+		stage.setOnCloseRequest(event -> {
+			mediaPlayer.stop();
+	    });
 		// Initializes currentLevel as 1 to implement level progression
 		int currentLevel = 1;
 
@@ -331,10 +339,20 @@ public class GameController {
 			}
 		}.start();
 	}
+	
+	
+	public void playBackgroundSound() {
+		String musicpath = "C:/Users/ridhi/eclipse-workspace/Asteroids/src/resources/music.mp3";
+		Media sound = new Media(Paths.get(musicpath).toUri().toString());
+		mediaPlayer = new MediaPlayer(sound);
+		mediaPlayer.play();
+		
+	}
 
 	private void createBackground() {
 		Image backgroundImage = new Image(BACKGROUND_IMAGE, 256, 256, false, false);
 		BackgroundImage background = new BackgroundImage(backgroundImage, BackgroundRepeat.REPEAT, BackgroundRepeat.REPEAT, BackgroundPosition.DEFAULT, null);
 		pane.setBackground(new Background(background));
 }
+	
 }
