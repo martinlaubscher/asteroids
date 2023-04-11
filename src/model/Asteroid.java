@@ -1,6 +1,9 @@
-package application;
+package model;
 
 import java.util.Random;
+
+import application.PolygonFactory;
+import model.Size;
 
 public class Asteroid extends Character {
 

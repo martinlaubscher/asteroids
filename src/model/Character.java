@@ -1,8 +1,10 @@
-package application;
+package model;
 
 import javafx.scene.shape.Shape;
+import application.GameController;
 import javafx.geometry.Point2D;
 import javafx.scene.shape.Polygon;
+import javafx.scene.paint.Color;
 
 public abstract class Character {
     private Polygon character;
@@ -14,6 +16,8 @@ public abstract class Character {
         this.character.setTranslateX(x);
         this.character.setTranslateY(y);
         this.movement = new Point2D(0, 0);
+        this.character.setStroke(Color.WHITE);
+        this.character.setStrokeWidth(2);
         this.setAlive(true);
     }
 
@@ -89,6 +93,4 @@ public abstract class Character {
 	public Boolean isAlive() {
 		return this.alive;
 	}
-	// Get distance travelled
-
 }
