@@ -1,7 +1,4 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -9,7 +6,7 @@
             "name": "Launch App",
             "request": "launch",
             "mainClass": "application.Main",
-            "vmArgs": "--module-path /Users/finbarallan/Documents/GitHub/Group-5/javafx-sdk-19.0.2.1/lib --add-modules javafx.controls,javafx.fxml"
+            "vmArgs": "--module-path C:/Java/javafx-sdk-20/lib --add-modules javafx.controls,javafx.fxml,javafx.media --add-exports javafx.graphics/com.sun.glass.utils=ALL-UNNAMED --add-exports javafx.graphics/com.sun.javafx.tk.quantum=ALL-UNNAMED --add-exports javafx.base/com.sun.javafx=ALL-UNNAMED --add-exports javafx.graphics/com.sun.javafx=ALL-UNNAMED --add-exports javafx.controls/com.sun.javafx=ALL-UNNAMED --add-opens javafx.graphics/com.sun.javafx=ALL-UNNAMED --add-opens javafx.controls/com.sun.javafx=ALL-UNNAMED"
         }
     ]
 }
