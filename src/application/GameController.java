@@ -15,10 +15,12 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -29,6 +31,7 @@ import model.EnemyShip;
 import model.PlayerShip;
 import model.Size;
 import model.Character;
+
 
 import java.io.File;
 import java.nio.file.Paths;
@@ -45,24 +48,76 @@ public class GameController {
 	private GridPane gamePane1;
 	private GridPane gamePane2;
 	private Label livesLabel = new Label("");
+	private Label levelLabel = new Label("");
+	private Label scoreText = new Label(""); // added score label
 	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
 	private final static String MUSICPATH = "src/resources/music.mp3";
+	private int level = 0;
+	private List<Asteroid> asteroids = new ArrayList<>();
+	
+	private int score = 0; // added score variable
+    
+	public static int randomX() {
+		return (int) (Math.random() * GameController.WIDTH);
+	}
+	
+	public static int randomY() {
+		return (int) (Math.random() * GameController.HEIGHT);
+	}
+	private void spawnAsteroidsIfNone() {
+		if (asteroids.stream().filter(Asteroid::isAlive).count() == 0) {
+			level++; // Increment level
+			levelLabel.setText("Level: " + level); // Update level text
+			spawnAsteroids(level);
+		}
+	}
+	private void spawnAsteroids(int level) {
+		for (int i = 0; i < level; i++) {
+			int x = randomX();
+			int y = randomY();
+			Asteroid asteroid = new Asteroid(x, y, Size.LARGE);
+			asteroids.add(asteroid);
+			pane.getChildren().add(asteroid.getCharacter());
+		}
+	}
 
 	public GameController() {
 		initializeStage();
-	}
+		
+    }
 
 	private void initializeStage() {
 		gamePane = new AnchorPane();
 		scene = new Scene(gamePane, WIDTH, HEIGHT);
 		stage = new Stage();
 		stage.setScene(scene);
-		pane.getChildren().add(livesLabel);
+		
 	}
 
-	private void gameOver() {
-        // TODO: Implement game over logic (e.g. display game over screen, prompt to restart)
-    }
+	private void showGameOverScreen() {
+		Text gameOverText = new Text("GAME OVER");
+		gameOverText.setLayoutX(WIDTH / 2 - 50);
+		gameOverText.setLayoutY(HEIGHT / 2);
+		pane.getChildren().add(gameOverText);
+	
+		Button playAgainButton = new Button("PLAY AGAIN?");
+		playAgainButton.setLayoutX(WIDTH / 2 - 40);
+		playAgainButton.setLayoutY(HEIGHT / 2 + 30);
+		playAgainButton.setOnAction(e -> {
+			pane.getChildren().remove(gameOverText);
+			pane.getChildren().remove(playAgainButton);
+			restartGame();
+		});
+		pane.getChildren().add(playAgainButton);
+	}
+	private void restartGame() {
+		stage.close();
+		GameController newGameController = new GameController();
+		newGameController.startGame();
+		PlayerShip.resetLives(); // Add this line to reset lives
+		
+	}
+
 
 	List<EnemyShip> enemyShips = new ArrayList<>();
 
@@ -92,7 +147,7 @@ public class GameController {
 			mediaPlayer.stop();
 	    });
 		// Initializes currentLevel as 1 to implement level progression
-		int currentLevel = 1;
+		int currentLevel = level;
 
 		pane.setPrefSize(1024, 768);
 
@@ -105,9 +160,21 @@ public class GameController {
 		livesLabel.setTranslateX(10);
 		livesLabel.setTranslateY(10);
 		pane.getChildren().add(livesLabel);
+		
 
-		// list storing all (active) asteroids
-		List<Asteroid> asteroids = new ArrayList<>();
+		levelLabel.setText("Level: " + currentLevel);
+		levelLabel.setTextFill(Color.WHITE);
+		levelLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+		levelLabel.setTranslateX(10);
+		levelLabel.setTranslateY(50);
+		pane.getChildren().add(levelLabel);
+
+		Label scoreText = new Label("Score: " + score);
+		scoreText.setTextFill(Color.WHITE);
+		scoreText.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+		scoreText.setTranslateX(10);
+		scoreText.setTranslateY(90);
+		pane.getChildren().add(scoreText);
 
 		// list storing all (active) bullets
 		List<Bullet> bullets = new ArrayList<>();
@@ -116,14 +183,14 @@ public class GameController {
 		List<Character> characters = new ArrayList<>();
 
 		// For level i, creates i large asteroids at the beginning
-		for (int i = 0; i < currentLevel; i++) {
-			Random rnd = new Random();
-			Asteroid asteroid = new Asteroid(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT), Size.LARGE);
-			asteroids.add(asteroid);
-		}
+for (int i = 0; i < currentLevel; i++) {
+    Random rnd = new Random();
+    Asteroid asteroid = new Asteroid(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT), Size.LARGE);
+    this.asteroids.add(asteroid);
+}
 
-		// Adds initial asteroids to the pane
-		asteroids.forEach(asteroid -> pane.getChildren().add(asteroid.getCharacter()));
+// Adds initial asteroids to the pane
+this.asteroids.forEach(asteroid -> pane.getChildren().add(asteroid.getCharacter()));
 		Timeline initialEnemyShipSpawnDelay = new Timeline(new KeyFrame(Duration.seconds(10)));
 		initialEnemyShipSpawnDelay.setOnFinished(event -> spawnEnemyShips());
 		initialEnemyShipSpawnDelay.play();
@@ -151,6 +218,10 @@ public class GameController {
 
 			@Override
 			public void handle(long now) {
+				if (pressedKeys.getOrDefault(KeyCode.H, false)) {
+					hyperspaceJump(playerShip, asteroids, enemyShips);
+				}
+
 				if (pressedKeys.getOrDefault(KeyCode.LEFT, false)) {
 					playerShip.turnLeft();
 				}
@@ -163,6 +234,7 @@ public class GameController {
 					playerShip.accelerate();
 				}
 				playerShip.move();
+				
 
 				asteroids.forEach(Asteroid::move);
 				enemyShips.forEach(enemyShip -> {
@@ -236,7 +308,44 @@ public class GameController {
 				// removing characters marked as dead by the collisions method
 				hearseMultiple(bullets, asteroids, enemyShips);
 
+				// Check if all asteroids are destroyed and spawn new ones if needed
+				spawnAsteroidsIfNone();
+
 			}
+
+			private void hyperspaceJump(PlayerShip playerShip, List<Asteroid> asteroids, List<EnemyShip> enemyShips) {
+				Random random = new Random();
+				Point2D newPosition;
+				boolean isSafe;
+			
+				do {
+					newPosition = new Point2D(random.nextInt(WIDTH), random.nextInt(HEIGHT));
+					isSafe = checkSafePosition(newPosition, playerShip, asteroids, enemyShips);
+				} while (!isSafe);
+			
+				playerShip.getCharacter().setTranslateX(newPosition.getX());
+				playerShip.getCharacter().setTranslateY(newPosition.getY());
+			}
+
+			private boolean checkSafePosition(Point2D newPosition, PlayerShip playerShip, List<Asteroid> asteroids, List<EnemyShip> enemyShips) {
+    final double safeDistance = 50;
+
+    for (Asteroid asteroid : asteroids) {
+        Point2D asteroidPosition = new Point2D(asteroid.getCharacter().getTranslateX(), asteroid.getCharacter().getTranslateY());
+        if (newPosition.distance(asteroidPosition) < safeDistance) {
+            return false;
+        }
+    }
+
+    for (EnemyShip enemyShip : enemyShips) {
+        Point2D enemyShipPosition = new Point2D(enemyShip.getCharacter().getTranslateX(), enemyShip.getCharacter().getTranslateY());
+        if (newPosition.distance(enemyShipPosition) < safeDistance) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 			/**
 			 * Combines the various list containing active characters into list
@@ -302,15 +411,32 @@ public class GameController {
 			 * @param asteroid The asteroid that might need to be split.
 			 */
 			public void splitAsteroids(Asteroid asteroid) {
-				if (asteroid.getSize() == Size.LARGE || asteroid.getSize() == Size.MEDIUM) {
-					for (int i = 0; i < 2; i++) {
-						Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
-								(int) asteroid.getCharacter().getTranslateY(), Size.values()[asteroid.getSize().ordinal()+1]);
-						asteroids.add(newAsteroid);
-						pane.getChildren().add(newAsteroid.getCharacter());
-					}
-				}
-			}
+        // Add points to the score based on asteroid size
+        if (asteroid.getSize() == Size.LARGE) {
+            score += 20;
+        } else if (asteroid.getSize() == Size.MEDIUM) {
+            score += 50;
+        } else if (asteroid.getSize() == Size.SMALL) {
+            score += 100;
+        }
+
+        scoreText.setText("Score: " + score); // Update score text
+
+        if (asteroid.getSize() == Size.LARGE) {
+            for (int i = 0; i < 2; i++) {
+                Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(), (int) asteroid.getCharacter().getTranslateY(), Size.MEDIUM);
+                asteroids.add(newAsteroid);
+                pane.getChildren().add(newAsteroid.getCharacter());
+            }
+        } else if (asteroid.getSize() == Size.MEDIUM) {
+            for (int i = 0; i < 2; i++) {
+                Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(), (int) asteroid.getCharacter().getTranslateY(), Size.SMALL);
+                asteroids.add(newAsteroid);
+                pane.getChildren().add(newAsteroid.getCharacter());
+            }
+        }
+        asteroid.setAlive(false);
+    }
 
 			/**
 			 * Checks and handles collisions between characters.
@@ -318,55 +444,61 @@ public class GameController {
 			public void collisions() {
 				characters.forEach(character -> {
 					for (Character otherCharacter : characters) {
-						// check that collision happens with other character & not with itself
+						// Check that collision happens with other character & not with itself
 						if (otherCharacter != character && character.collide(otherCharacter)) {
 							switch (character.getClass().getSimpleName()) {
-								// collision handling for player ship
+								// Collision handling for player ship
 								case "PlayerShip" -> {
-									// ignoring own bullets
-									if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
+									if (!playerShip.isInvulnerable() && (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly()))) {
 										playerShip.decrementLives();
+							
+										// Respawn the player ship in the middle of the screen
+										playerShip.respawn(GameController.WIDTH / 2, GameController.HEIGHT / 2);
+							
+										// Set the invulnerability end time (3 seconds)
+										playerShip.setInvulnerabilityEndTime(System.nanoTime() + 3_000_000_000L);
+							
+										// Update the lives label
 										livesLabel.setText("Lives: " + Integer.toString(playerShip.getLives()));
-										if (playerShip.getLives() > 0) {
-											playerShip.respawn(WIDTH / 2, HEIGHT / 2);
-											return; // Prevent multiple collisions and multiple life decrements in a single frame
-										} else if (playerShip.getLives() < 1) {
-											gameOver();
-											return; // Prevent multiple collisions and multiple life decrements in a single frame
+										if (playerShip.getLives() <= 0) {
+											showGameOverScreen();
+											this.stop();
+										} else {
+											livesLabel.setText("Lives: " + playerShip.getLives());
 										}
 									}
 								}
-							// collision handling for enemy ships
-							case "EnemyShip" -> {
-								// ignoring own bullets
-								if (!(otherCharacter instanceof Bullet) || ((Bullet) otherCharacter).isFriendly()) {
-									character.setAlive(false);
-								}
-							}
-							// collision handling for asteroids
-							case "Asteroid" -> {
-								// ignoring collisions with other asteroids
-								if (!(otherCharacter instanceof Asteroid)) {
-									character.setAlive(false);
-									splitAsteroids((Asteroid) character);
-								}
-							}
-							// collision handling for bullets
-							case "Bullet" -> {
-								// collision handling for friendly bullets
-								if (((Bullet) character).isFriendly()) {
-									// ignoring friendly fire
-									if (otherCharacter != playerShip) {
-										character.setAlive(false);
-									}
-									// collision handling for enemy bullets
-								} else {
-									// ignoring friendly fire
-									if (!(otherCharacter instanceof EnemyShip)) {
+								// Collision handling for enemy ships
+								case "EnemyShip" -> {
+									// Ignoring own bullets
+									if (!(otherCharacter instanceof Bullet) || ((Bullet) otherCharacter).isFriendly()) {
 										character.setAlive(false);
 									}
 								}
-							}
+								// Collision handling for asteroids
+								case "Asteroid" -> {
+									// Ignoring collisions with other asteroids
+									if (!(otherCharacter instanceof Asteroid)) {
+										character.setAlive(false);
+										splitAsteroids((Asteroid) character);
+									}
+								}
+								// Collision handling for bullets
+								case "Bullet" -> {
+									// Collision handling for friendly bullets
+									if (((Bullet) character).isFriendly()) {
+										// Ignoring friendly fire
+										if (otherCharacter != playerShip) {
+											character.setAlive(false);
+										}
+									// Collision handling for enemy bullets
+									} else {
+										// Ignoring friendly fire
+										if (!(otherCharacter instanceof EnemyShip)) {
+											character.setAlive(false);
+										}
+									}
+								}
 							}
 						}
 					}
