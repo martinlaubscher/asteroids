@@ -29,7 +29,7 @@ public class PlayerShip extends Ship {
         if (this.lives < 0) {
             this.lives = 0;
         }
-        livesLabel.setText("Lives: " + this.lives);
+        // livesLabel.setText("Lives: " + this.lives);
     }
 
     public Boolean isSafelySpawned() {

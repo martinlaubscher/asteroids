@@ -315,12 +315,13 @@ public class GameController {
 									// ignoring own bullets
 									if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
 										playerShip.decrementLives();
+										livesLabel.setText("Lives:" + Integer.toString(playerShip.getLives()));
 										if (playerShip.getLives() > 1) {
 											playerShip.respawn(WIDTH / 2, HEIGHT / 2);
-											break; // Prevent multiple collisions and multiple life decrements in a single frame
+											return; // Prevent multiple collisions and multiple life decrements in a single frame
 										} else if (playerShip.getLives() <= 1) {
 											gameOver();
-											break; // Prevent multiple collisions and multiple life decrements in a single frame
+											return; // Prevent multiple collisions and multiple life decrements in a single frame
 										}
 									}
 								}
