@@ -15,7 +15,14 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.scene.control.Label;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import model.Asteroid;
 import model.Bullet;
 import model.EnemyShip;
@@ -35,6 +42,9 @@ public class GameController {
 	private AnchorPane gamePane;
 	private Scene scene;
 	private MediaPlayer mediaPlayer;
+	private GridPane gamePane1;
+	private GridPane gamePane2;
+	private Label livesLabel = new Label("");
 	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
 
 	public GameController() {
@@ -46,7 +56,27 @@ public class GameController {
 		scene = new Scene(gamePane, WIDTH, HEIGHT);
 		stage = new Stage();
 		stage.setScene(scene);
+		pane.getChildren().add(livesLabel);
+	}
 
+	private void gameOver() {
+        // TODO: Implement game over logic (e.g. display game over screen, prompt to restart)
+    }
+
+	List<EnemyShip> enemyShips = new ArrayList<>();
+
+	private void spawnEnemyShips() {
+		Timeline enemyShipSpawner = new Timeline(
+			new KeyFrame(Duration.seconds(10)), // wait 10 seconds before spawning first enemy ship
+			new KeyFrame(Duration.seconds(20), event -> {
+				Random rnd = new Random();
+				EnemyShip enemyShip = new EnemyShip(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT));
+				pane.getChildren().add(enemyShip.getCharacter());
+				enemyShips.add(enemyShip);
+			})
+		);
+		enemyShipSpawner.setCycleCount(Timeline.INDEFINITE);
+		enemyShipSpawner.play();
 	}
 
 	/**
@@ -67,14 +97,13 @@ public class GameController {
 
 		PlayerShip playerShip = new PlayerShip(WIDTH / 2, HEIGHT / 2);
 		pane.getChildren().add(playerShip.getCharacter());
-		List<EnemyShip> enemyShips = new ArrayList<>();
-		for (int i = 0; i < 5; i++) {
-			Random rnd = new Random();
-			EnemyShip EnemyShip = new EnemyShip((rnd.nextInt(WIDTH)), (rnd.nextInt(HEIGHT)));
-			enemyShips.add(EnemyShip);
-		}
 
-		enemyShips.forEach(EnemyShip -> pane.getChildren().add(EnemyShip.getCharacter()));
+		Label livesLabel = new Label("Lives: " + playerShip.getLives());
+		livesLabel.setTextFill(Color.WHITE);
+		livesLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+		livesLabel.setTranslateX(10);
+		livesLabel.setTranslateY(10);
+		pane.getChildren().add(livesLabel);
 
 		// list storing all (active) asteroids
 		List<Asteroid> asteroids = new ArrayList<>();
@@ -94,6 +123,9 @@ public class GameController {
 
 		// Adds initial asteroids to the pane
 		asteroids.forEach(asteroid -> pane.getChildren().add(asteroid.getCharacter()));
+		Timeline initialEnemyShipSpawnDelay = new Timeline(new KeyFrame(Duration.seconds(10)));
+		initialEnemyShipSpawnDelay.setOnFinished(event -> spawnEnemyShips());
+		initialEnemyShipSpawnDelay.play();
 
 		Scene scene = new Scene(pane);
 		stage.setTitle("Asteroids!");
@@ -129,14 +161,17 @@ public class GameController {
 				if (pressedKeys.getOrDefault(KeyCode.UP, false)) {
 					playerShip.accelerate();
 				}
-
-				if (pressedKeys.getOrDefault(KeyCode.DOWN, false)) {
-					playerShip.decelerate();
-				}
 				playerShip.move();
 
 				asteroids.forEach(Asteroid::move);
-				enemyShips.forEach(Character::accelerate);
+				enemyShips.forEach(enemyShip -> {
+					long currentTime = System.nanoTime();
+					if (currentTime - enemyShip.getLastDirectionChange() > 1000000000000L) {
+						enemyShip.setRandomMovement();
+						enemyShip.setLastDirectionChange(currentTime);
+					}
+					enemyShip.move();
+				});
 
 				// enemy ship fire
 				enemyShips.forEach(EnemyShip -> {
@@ -157,7 +192,7 @@ public class GameController {
 
 						// send bullet on its path
 						bullet.accelerate();
-						bullet.setMovement(target.normalize().multiply(4));
+						bullet.setMovement(target.normalize().multiply(Bullet.getSpeed()));
 
 						pane.getChildren().add(bullet.getCharacter());
 
@@ -177,7 +212,7 @@ public class GameController {
 					// accelerate bullet
 					bullet.accelerate();
 					// move bullet based on ship's rotation
-					bullet.setMovement(bullet.getMovement().normalize().multiply(4));
+					bullet.setMovement(bullet.getMovement().normalize().multiply(Bullet.getSpeed()));
 					// add ship's momentum to bullet trajectory
 					bullet.setMovement(bullet.getMovement().add(playerShip.getMovement()));
 
@@ -229,9 +264,9 @@ public class GameController {
 				bullets.forEach(Bullet::setDist);
 
 				// removing bullets that have exceeded MAXDIST
-				bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMAXDIST())
+				bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMaxdist())
 						.forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-				bullets.removeAll(bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMAXDIST()).toList());
+				bullets.removeAll(bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMaxdist()).toList());
 			}
 
 			/**
@@ -248,7 +283,7 @@ public class GameController {
 			}
 
 			/**
-			 * Helper method for 'hearse'. Takes a list of lists and calls 'hearse' for each
+			 * Helper method for 'hearse'. Takes multiple lists and calls 'hearse' for each
 			 * of them.
 			 * 
 			 * @param lists The list of lists to check.
@@ -266,44 +301,43 @@ public class GameController {
 			 * @param asteroid The asteroid that might need to be split.
 			 */
 			public void splitAsteroids(Asteroid asteroid) {
-				if (asteroid.getSize() == Size.LARGE) {
+				if (asteroid.getSize() == Size.LARGE || asteroid.getSize() == Size.MEDIUM) {
 					for (int i = 0; i < 2; i++) {
 						Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
-								(int) asteroid.getCharacter().getTranslateY(), Size.MEDIUM);
-						asteroids.add(newAsteroid);
-						pane.getChildren().add(newAsteroid.getCharacter());
-					}
-				} else if (asteroid.getSize() == Size.MEDIUM) {
-					for (int i = 0; i < 2; i++) {
-						Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
-								(int) asteroid.getCharacter().getTranslateY(), Size.SMALL);
+								(int) asteroid.getCharacter().getTranslateY(), Size.values()[asteroid.getSize().ordinal()+1]);
 						asteroids.add(newAsteroid);
 						pane.getChildren().add(newAsteroid.getCharacter());
 					}
 				}
-				asteroid.setAlive(false);
 			}
 
 			/**
 			 * Checks and handles collisions between characters.
-			 */
+			 */			
 			public void collisions() {
 				characters.forEach(character -> {
 					for (Character otherCharacter : characters) {
 						// check that collision happens with other character & not with itself
 						if (otherCharacter != character && character.collide(otherCharacter)) {
 							switch (character.getClass().getSimpleName()) {
-							// collision handling for player ship
-							case "PlayerShip" -> {
-								// ignoring friendly fire
-								if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
-									((PlayerShip) character).decrementLives();
-									// TODO implement respawn/game over
+								// collision handling for player ship
+								case "PlayerShip" -> {
+									// ignoring own bullets
+									if (!(otherCharacter instanceof Bullet) || !(((Bullet) otherCharacter).isFriendly())) {
+										playerShip.decrementLives();
+										livesLabel.setText("Lives:" + Integer.toString(playerShip.getLives()));
+										if (playerShip.getLives() > 1) {
+											playerShip.respawn(WIDTH / 2, HEIGHT / 2);
+											return; // Prevent multiple collisions and multiple life decrements in a single frame
+										} else if (playerShip.getLives() <= 1) {
+											gameOver();
+											return; // Prevent multiple collisions and multiple life decrements in a single frame
+										}
+									}
 								}
-							}
 							// collision handling for enemy ships
 							case "EnemyShip" -> {
-								// ignoring friendly fire
+								// ignoring own bullets
 								if (!(otherCharacter instanceof Bullet) || ((Bullet) otherCharacter).isFriendly()) {
 									character.setAlive(false);
 								}
@@ -356,3 +390,5 @@ public class GameController {
 }
 	
 }
+}
+

@@ -1,11 +1,11 @@
 package model;
 
+import application.GameController;
 import javafx.scene.shape.Polygon;
-import model.Character;
 
 public class Bullet extends Character {
     private static final int SPEED = 4;
-    private static final double MAXDIST = 350;
+    private static final double MAXDIST = GameController.HEIGHT*0.8;
     // flag indicating if player bullet
     private final boolean friendly;
     //    distance traveled
@@ -18,9 +18,14 @@ public class Bullet extends Character {
         this.friendly = friendly;
     }
 
-    // getter function to get the MAXDISTANCE value of the Bullet class
-    public static double getMAXDIST() {
+    // getter function to get the MAXDIST value of the Bullet class
+    public static double getMaxdist() {
         return MAXDIST;
+    }
+
+    // getter function to get the SPEED value of the Bullet class
+    public static int getSpeed() {
+        return SPEED;
     }
 
     // setter function to set the distance the bullet has traveled
@@ -37,4 +42,5 @@ public class Bullet extends Character {
     public boolean isFriendly() {
         return friendly;
     }
+    
 }
