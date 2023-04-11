@@ -12,7 +12,6 @@ import javafx.util.Duration;
 
 public class MenuSubScene extends SubScene{
 	
-	private final static String FONT_PATH = "resources/kenvector_future.ttf";
 	private final static String BACKGROUND_IMAGE = "/resources/red_panel.png";
 	
 	private  boolean isHidden;
