@@ -44,7 +44,7 @@ public class MenuScene {
 	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
 	private final static String LOGO = "/resources/Preview_1.gif";
 
-	private TextField textBox;// cosmetic changes pending
+	private TextField textBox;
 	private MenuButtonFeature saveButton;
 
 	private MenuSubScene helpSubscene;
@@ -140,7 +140,7 @@ public class MenuScene {
 
          // Read the scores from the file and append them to the TextArea
          try {
-             File scoresFile = new File("C:/Users/ridhi/eclipse-workspace/Asteroids/src/resources/scores.txt");
+             File scoresFile = new File("src/resources/scores.txt");
              Scanner scanner = new Scanner(scoresFile);
              while (scanner.hasNextLine()) {
                  scoresTextArea.appendText(scanner.nextLine() + "\n");
@@ -188,7 +188,7 @@ public class MenuScene {
 		 
 		// Read the rules from the file and append them to the TextArea
          try {
-             File scoresFile = new File("C:/Users/ridhi/eclipse-workspace/Asteroids/src/resources/rules.txt");
+             File scoresFile = new File("src/resources/rules.txt");
              Scanner scanner = new Scanner(scoresFile);
              while (scanner.hasNextLine()) {
             	 rulesTextArea.appendText(scanner.nextLine() + "\n");
@@ -208,7 +208,7 @@ public class MenuScene {
 
 	private void saveTextToFile(String text) {
 		try {
-			File outputFile = new File("/resources/scores.txt");
+			File outputFile = new File("src/resources/scores.txt");
 			if (!outputFile.exists()) {
 				outputFile.createNewFile();
 			}

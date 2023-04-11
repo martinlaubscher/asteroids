@@ -46,6 +46,7 @@ public class GameController {
 	private GridPane gamePane2;
 	private Label livesLabel = new Label("");
 	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
+	private final static String MUSICPATH = "src/resources/music.mp3";
 
 	public GameController() {
 		initializeStage();
@@ -376,8 +377,7 @@ public class GameController {
 	
 	
 	public void playBackgroundSound() {
-		String musicpath = "C:/Users/ridhi/eclipse-workspace/Asteroids/src/resources/music.mp3";
-		Media sound = new Media(Paths.get(musicpath).toUri().toString());
+		Media sound = new Media(Paths.get(MUSICPATH).toUri().toString());
 		mediaPlayer = new MediaPlayer(sound);
 		mediaPlayer.play();
 		
