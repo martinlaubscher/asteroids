@@ -8,6 +8,16 @@ public class PlayerShip extends Ship {
     private static int lives;
     private Boolean safelySpawned;
     private long invulnerabilityEndTime; // Add invulnerabilityEndTime variable
+    private static final double DAMPING_FACTOR = 0.99;
+
+    @Override
+    public void move() {
+        // Apply the damping factor to the current movement vector
+        setMovement(getMovement().multiply(DAMPING_FACTOR));
+
+        // Call the superclass move method to handle the rest of the movement
+        super.move();
+    }
 
     public static void resetLives() {
         lives = 3;
