@@ -1,3 +1,8 @@
-ABC,340
-XYZ,840
-DEF,650
+Ridhima, 220
+Ridhima, 170
+Ridhima, 70
+Ridhima, 70
+Ridhima, 20
+Ridhima, 20
+Ridhima, 20
+Ridhima, 0

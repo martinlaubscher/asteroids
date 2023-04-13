@@ -2,16 +2,15 @@ package application;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.DropShadow;
@@ -24,7 +23,8 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import model.MenuButtonFeature;
 import model.MenuSubScene;
@@ -40,12 +40,9 @@ public class MenuScene {
 
 	private final static int MENU_BUTTON_LENGTH = 100;
 	private final static int MENU_BUTTON_HEIGHT = 150;
-	
+
 	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
 	private final static String LOGO = "/resources/Preview_1.gif";
-
-	private TextField textBox;// cosmetic changes pending
-	private MenuButtonFeature saveButton;
 
 	private MenuSubScene helpSubscene;
 	private MenuSubScene scoreSubscene;
@@ -57,6 +54,7 @@ public class MenuScene {
 	List<MenuButtonFeature> menuButtons;
 	private MenuSubScene highScoreSubScene;
 	private MenuSubScene rulesSubScene;
+	public String name;
 
 	public MenuScene() {
 		menuButtons = new ArrayList<>();
@@ -96,7 +94,7 @@ public class MenuScene {
 
 	}
 
-	private void createHighScoreSubScene() {
+	public void createHighScoreSubScene() {
 		highScoreSubScene = new MenuSubScene();
 		mainPane.getChildren().add(highScoreSubScene);
 		StartGameLabel startGameLabel = new StartGameLabel("CHAMPIONS");
@@ -104,11 +102,10 @@ public class MenuScene {
 		startGameLabel.setLayoutY(25);
 		highScoreSubScene.getPane().getChildren().add(startGameLabel);
 		highScoreSubScene.getPane().getChildren().add(createTextboxForScore());
-		
+
 	}
 
-
-	private void createStartGameSubscene() {
+	public void createStartGameSubscene() {
 		playSubscene = new MenuSubScene();
 		mainPane.getChildren().add(playSubscene);
 
@@ -116,111 +113,10 @@ public class MenuScene {
 		startGameLabel.setLayoutX(110);
 		startGameLabel.setLayoutY(25);
 		playSubscene.getPane().getChildren().add(startGameLabel);
-		playSubscene.getPane().getChildren().add(createTextboxForName());
-		playSubscene.getPane().getChildren().add(createButtonToStart());
 
-	}
-	
-	private void createRulesSubScene() {
-		rulesSubScene = new MenuSubScene();
-		mainPane.getChildren().add(rulesSubScene);
-		StartGameLabel startGameLabel = new StartGameLabel("RULES");
-		startGameLabel.setLayoutX(110);
-		startGameLabel.setLayoutY(25);
-		rulesSubScene.getPane().getChildren().add(startGameLabel);
-		rulesSubScene.getPane().getChildren().add(createTextboxForRules());
-		
-	}
+		TextField nameTextField = createTextboxForName();
+		playSubscene.getPane().getChildren().add(nameTextField);
 
-	private HBox createTextboxForScore() {
-		// Create a new TextArea to display the scores
-         TextArea scoresTextArea = new TextArea();
-         scoresTextArea.setEditable(false);
-         scoresTextArea.setPrefSize(MENU_BUTTON_HEIGHT, MENU_BUTTON_LENGTH);
-
-         // Read the scores from the file and append them to the TextArea
-         try {
-             File scoresFile = new File("C:/Users/ridhi/eclipse-workspace/Asteroids/src/resources/scores.txt");
-             Scanner scanner = new Scanner(scoresFile);
-             while (scanner.hasNextLine()) {
-                 scoresTextArea.appendText(scanner.nextLine() + "\n");
-             }
-             scanner.close();
-         } catch (FileNotFoundException e) {
-             e.printStackTrace();
-         }
-
-         // Show the scoreSubscene with the TextArea containing the scores
-         HBox scoreBox = new HBox(scoresTextArea);
-         scoreBox.setLayoutX(100);
-         scoreBox.setLayoutY(100);
-		 return scoreBox;
-	}
-
-
-	private HBox createTextboxForName() {
-		HBox box = new HBox();
-		box.setSpacing(60);
-		textBox = new TextField();
-		textBox.setLayoutX(50);
-		textBox.setLayoutY(25);
-		saveButton = new MenuButtonFeature("SAVE");
-		saveButton.setLayoutX(50);
-		saveButton.setLayoutY(25);
-		saveButton.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				saveTextToFile(textBox.getText());
-			}
-		});
-		box.getChildren().addAll(textBox, saveButton);
-
-		box.setLayoutX(100);
-		box.setLayoutY(100);
-		return box;
-	}
-	
-	private HBox createTextboxForRules() {
-		 TextArea rulesTextArea = new TextArea();
-		 rulesTextArea.setEditable(false);
-		 rulesTextArea.setPrefSize(430, 250);
-		 rulesTextArea.setStyle("-fx-font-family: 'Monotype Corsiva'; -fx-font-size: 12; -fx-font-weight: bold;");
-		 
-		// Read the rules from the file and append them to the TextArea
-         try {
-             File scoresFile = new File("C:/Users/ridhi/eclipse-workspace/Asteroids/src/resources/rules.txt");
-             Scanner scanner = new Scanner(scoresFile);
-             while (scanner.hasNextLine()) {
-            	 rulesTextArea.appendText(scanner.nextLine() + "\n");
-             }
-             scanner.close();
-         } catch (FileNotFoundException e) {
-             e.printStackTrace();
-         }
-
-         // Show the ruleSubscene with the TextArea containing the scores
-         HBox rulesBox = new HBox(rulesTextArea);
-         scoreSubscene.setRoot(rulesBox);
-         rulesBox.setLayoutX(100);
-         rulesBox.setLayoutY(100);
-		 return rulesBox;
-	}
-
-	private void saveTextToFile(String text) {
-		try {
-			File outputFile = new File("/resources/scores.txt");
-			if (!outputFile.exists()) {
-				outputFile.createNewFile();
-			}
-			FileWriter writer = new FileWriter(outputFile);
-			writer.write(text);
-			writer.close();
-		} catch (IOException e) {
-			System.err.println("Error writing to file: " + e.getMessage());
-		}
-	}
-
-	private MenuButtonFeature createButtonToStart() {
 		MenuButtonFeature startButton = new MenuButtonFeature("START");
 		startButton.setLayoutX(350);
 		startButton.setLayoutY(300);
@@ -229,13 +125,94 @@ public class MenuScene {
 
 			@Override
 			public void handle(ActionEvent event) {
-				GameController gameController = new GameController();
-				gameController.startGame();
+				name = nameTextField.getText().trim(); 
+				if (!name.isEmpty()) {
+					GameController gameController = new GameController(name);
+					gameController.startGame();
+				}else {
+					Alert alert = new Alert(AlertType.INFORMATION);
+			        alert.setTitle("Information Dialog");
+			        alert.setHeaderText(null);
+			        alert.setContentText("Enter your Name!");
 
+			        alert.showAndWait();
+				}
 			}
 		});
+		playSubscene.getPane().getChildren().add(startButton);
+	}
 
-		return startButton;
+	private void createRulesSubScene() {
+		rulesSubScene = new MenuSubScene();
+		mainPane.getChildren().add(rulesSubScene);
+		StartGameLabel startGameLabel = new StartGameLabel("RULES");
+		startGameLabel.setLayoutX(110);
+		startGameLabel.setLayoutY(25);
+		rulesSubScene.getPane().getChildren().add(startGameLabel);
+		rulesSubScene.getPane().getChildren().add(createTextboxForRules());
+
+	}
+
+	public HBox createTextboxForScore() {
+		TextArea scoresTextArea = new TextArea();
+		scoresTextArea.setEditable(false);
+		scoresTextArea.setPrefSize(400, 250);
+		scoresTextArea.setFont(Font.font("Cambria", FontWeight.BOLD, 18));
+		try {
+			File scoresFile = new File("src/resources/scores.txt");
+			Scanner scanner = new Scanner(scoresFile);
+			while (scanner.hasNextLine()) {
+				scoresTextArea.appendText(scanner.nextLine() + "\n");
+			}
+			scanner.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		HBox scoreBox = new HBox(scoresTextArea);
+		scoreBox.setLayoutX(100);
+		scoreBox.setLayoutY(100);
+		return scoreBox;
+	}
+
+	private TextField createTextboxForName() {
+		TextField nameField = new TextField();
+		nameField.setPromptText("Enter your name");
+		nameField.setFont(Font.font("Cambria", FontWeight.BOLD, 28));
+		nameField.setLayoutX(100);
+		nameField.setLayoutY(150);
+		nameField.setPrefWidth(200);
+
+		nameField.setOnAction(e -> {
+			name = nameField.getText();
+		});
+
+		return nameField;
+	}
+
+	private HBox createTextboxForRules() {
+		TextArea rulesTextArea = new TextArea();
+		rulesTextArea.setEditable(false);
+		rulesTextArea.setPrefSize(430, 250);
+		rulesTextArea.setStyle("-fx-font-family: 'Monotype Corsiva'; -fx-font-size: 12; -fx-font-weight: bold;");
+
+		try {
+			File scoresFile = new File("src/resources/rules.txt");
+			Scanner scanner = new Scanner(scoresFile);
+			while (scanner.hasNextLine()) {
+				rulesTextArea.appendText(scanner.nextLine() + "\n");
+			}
+			scanner.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		// Show the ruleSubscene with the TextArea containing the scores
+		HBox rulesBox = new HBox(rulesTextArea);
+		scoreSubscene.setRoot(rulesBox);
+		rulesBox.setLayoutX(100);
+		rulesBox.setLayoutY(100);
+		return rulesBox;
 	}
 
 	public Stage getMainStage() {
@@ -252,7 +229,7 @@ public class MenuScene {
 	private void CreateButtons() {
 		createStartButton();
 		createScoresButton();
-		createHowToPlayButton();
+		createRulesButton();
 		createExitButton();
 	}
 
@@ -284,7 +261,7 @@ public class MenuScene {
 		});
 	}
 
-	private void createHowToPlayButton() {
+	private void createRulesButton() {
 
 		MenuButtonFeature creditsButton = new MenuButtonFeature("RULES");
 		AddMenuButtons(creditsButton);
@@ -322,14 +299,9 @@ public class MenuScene {
 	}
 
 	private void createLogo() {
-		/*ImageView logo = new ImageView(LOGO);
-		logo.setLayoutX(580);
-		logo.setLayoutY(50);*/
 		StartGameLabel startGameLabel = new StartGameLabel("ASTEROIDS");
 		startGameLabel.setLayoutX(350);
 		startGameLabel.setLayoutY(25);
-		
-		//highScoreSubScene.getPane().getChildren().add(startGameLabel);
 
 		startGameLabel.setOnMouseEntered(new EventHandler<MouseEvent>() {
 
@@ -352,11 +324,13 @@ public class MenuScene {
 		mainPane.getChildren().add(startGameLabel);
 
 	}
+
 	private void createLogo2() {
 		ImageView logo = new ImageView(LOGO);
-		logo.setLayoutX(800);
-		//logo.setLayoutY(10);
-		
+		logo.setFitHeight(150);
+		logo.setFitWidth(150);
+		logo.setLayoutX(700);
+
 		logo.setOnMouseEntered(new EventHandler<MouseEvent>() {
 
 			@Override
@@ -376,6 +350,6 @@ public class MenuScene {
 		});
 
 		mainPane.getChildren().add(logo);
-		
+
 	}
 }

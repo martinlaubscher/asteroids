@@ -10,15 +10,12 @@ import javafx.scene.text.Font;
 public class MenuButtonFeature extends Button {
 
 	private final static String FONT_PATH = "/resources/kenvector_future.ttf";
-	private final static String BUTTON_PRESSED_STYLE = "-fx-background-color: transparent; -fx-background-image: url('/resources/red_button_pressed.png');";
-	private final static String BUTTON_FREE_STYLE = "-fx-background-color: transparent; -fx-background-image: url('/resources/red_button.png');";
 
 	public MenuButtonFeature(String text) {
 		setText(text);
 		setButtonFont();
 		setPrefWidth(190);
 		setPrefHeight(49);
-		setStyle(BUTTON_FREE_STYLE);
 		initializeButtonListeners();
 
 	}
@@ -30,14 +27,12 @@ public class MenuButtonFeature extends Button {
 	}
 
 	private void setButtonPressedStyle() {
-		setStyle(BUTTON_PRESSED_STYLE);
 		setPrefHeight(45);
 		setLayoutY(getLayoutY() + 4);
 
 	}
 
 	private void setButtonReleasedStyle() {
-		setStyle(BUTTON_FREE_STYLE);
 		setPrefHeight(45);
 		setLayoutY(getLayoutY() - 4);
 
