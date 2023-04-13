@@ -1,0 +1,14 @@
+* Destroy all asteroids and enemy ships while avoiding collisions. 
+* Asteroids and opposing ships increase in difficulty as the game progresses. 
+* The player begins with 3 lives. 
+* Spaceship actions are controlled by the player: Turn right or left. 
+* Shoot a bullet toward the ship's direction.  
+* Hyperspace jumps to disappear and resurface in a safe spot on the screen. 
+* When the player's ship collides with an asteroid or opposing ship, 
+ the player loses one life and is respawned after a brief invincibility period 
+ or in a safe place. The game ends when the player dies.
+* The player earns points by destroying asteroids and enemy ships:
+-> Large asteroid: 20 points
+-> Medium asteroid: 50 points
+-> Small asteroid: 100 points
+-> Enemy ship: 100 points

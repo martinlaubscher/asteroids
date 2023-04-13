@@ -42,9 +42,9 @@ public class MenuScene {
 	private final static int MENU_BUTTON_HEIGHT = 150;
 	
 	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
-	private final static String LOGO = "/resources/asteroid_logo2.png";
+	private final static String LOGO = "/resources/Preview_1.gif";
 
-	private TextField textBox;// cosmetic changes pending
+	private TextField textBox;
 	private MenuButtonFeature saveButton;
 
 	private MenuSubScene helpSubscene;
@@ -68,6 +68,7 @@ public class MenuScene {
 		CreateButtons();
 		createBackground();
 		createLogo();
+		createLogo2();
 
 	}
 
@@ -139,7 +140,7 @@ public class MenuScene {
 
          // Read the scores from the file and append them to the TextArea
          try {
-             File scoresFile = new File("C:/Users/ridhi/eclipse-workspace/Asteroids/src/resources/scores.txt");
+             File scoresFile = new File("src/resources/scores.txt");
              Scanner scanner = new Scanner(scoresFile);
              while (scanner.hasNextLine()) {
                  scoresTextArea.appendText(scanner.nextLine() + "\n");
@@ -182,9 +183,22 @@ public class MenuScene {
 	private HBox createTextboxForRules() {
 		 TextArea rulesTextArea = new TextArea();
 		 rulesTextArea.setEditable(false);
-		 rulesTextArea.setPrefSize(150, 100);
+		 rulesTextArea.setPrefSize(430, 250);
+		 rulesTextArea.setStyle("-fx-font-family: 'Monotype Corsiva'; -fx-font-size: 12; -fx-font-weight: bold;");
+		 
+		// Read the rules from the file and append them to the TextArea
+         try {
+             File scoresFile = new File("src/resources/rules.txt");
+             Scanner scanner = new Scanner(scoresFile);
+             while (scanner.hasNextLine()) {
+            	 rulesTextArea.appendText(scanner.nextLine() + "\n");
+             }
+             scanner.close();
+         } catch (FileNotFoundException e) {
+             e.printStackTrace();
+         }
 
-         // Show the scoreSubscene with the TextArea containing the scores
+         // Show the ruleSubscene with the TextArea containing the scores
          HBox rulesBox = new HBox(rulesTextArea);
          scoreSubscene.setRoot(rulesBox);
          rulesBox.setLayoutX(100);
@@ -194,7 +208,7 @@ public class MenuScene {
 
 	private void saveTextToFile(String text) {
 		try {
-			File outputFile = new File("/resources/scores.txt");
+			File outputFile = new File("src/resources/scores.txt");
 			if (!outputFile.exists()) {
 				outputFile.createNewFile();
 			}
@@ -288,13 +302,11 @@ public class MenuScene {
 	private void createExitButton() {
 		MenuButtonFeature exitButton = new MenuButtonFeature("EXIT");
 		AddMenuButtons(exitButton);
-
 		exitButton.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
 				mainStage.close();
-
 			}
 		});
 
@@ -308,10 +320,41 @@ public class MenuScene {
 	}
 
 	private void createLogo() {
-		ImageView logo = new ImageView(LOGO);
-		logo.setLayoutX(380);
-		logo.setLayoutY(50);
+		/*ImageView logo = new ImageView(LOGO);
+		logo.setLayoutX(580);
+		logo.setLayoutY(50);*/
+		StartGameLabel startGameLabel = new StartGameLabel("ASTEROIDS");
+		startGameLabel.setLayoutX(350);
+		startGameLabel.setLayoutY(25);
+		
+		//highScoreSubScene.getPane().getChildren().add(startGameLabel);
 
+		startGameLabel.setOnMouseEntered(new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent event) {
+				startGameLabel.setEffect(new DropShadow());
+
+			}
+		});
+
+		startGameLabel.setOnMouseExited(new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent event) {
+				startGameLabel.setEffect(null);
+
+			}
+		});
+
+		mainPane.getChildren().add(startGameLabel);
+
+	}
+	private void createLogo2() {
+		ImageView logo = new ImageView(LOGO);
+		logo.setLayoutX(800);
+		//logo.setLayoutY(10);
+		
 		logo.setOnMouseEntered(new EventHandler<MouseEvent>() {
 
 			@Override
@@ -331,6 +374,6 @@ public class MenuScene {
 		});
 
 		mainPane.getChildren().add(logo);
-
+		
 	}
 }
