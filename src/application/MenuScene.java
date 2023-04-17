@@ -8,6 +8,7 @@ import java.util.Scanner;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -42,11 +43,10 @@ public class MenuScene {
 	private final static int MENU_BUTTON_HEIGHT = 150;
 
 	private final static String BACKGROUND_IMAGE = "/resources/deep_blue.png";
-	private final static String LOGO = "/resources/Preview_1.gif";
+	private final static String LOGO = "/resources/Preview.gif";
 
 	private MenuSubScene helpSubscene;
 	private MenuSubScene scoreSubscene;
-	private MenuSubScene howToPlaySubscene;
 	private MenuSubScene playSubscene;
 
 	private MenuSubScene sceneToHide;
@@ -54,8 +54,10 @@ public class MenuScene {
 	List<MenuButtonFeature> menuButtons;
 	private MenuSubScene highScoreSubScene;
 	private MenuSubScene rulesSubScene;
+	private MenuSubScene controlSubscene;
 	public String name;
 
+	// Constructor
 	public MenuScene() {
 		menuButtons = new ArrayList<>();
 		mainPane = new AnchorPane();
@@ -85,12 +87,15 @@ public class MenuScene {
 		mainPane.getChildren().add(helpSubscene);
 		scoreSubscene = new MenuSubScene();
 		mainPane.getChildren().add(scoreSubscene);
-		howToPlaySubscene = new MenuSubScene();
-		mainPane.getChildren().add(howToPlaySubscene);
+		rulesSubScene = new MenuSubScene();
+		mainPane.getChildren().add(rulesSubScene);
+		controlSubscene = new MenuSubScene();
+		mainPane.getChildren().add(controlSubscene);
 
 		createStartGameSubscene();
 		createHighScoreSubScene();
 		createRulesSubScene();
+		createControlsSubScene();
 
 	}
 
@@ -125,17 +130,17 @@ public class MenuScene {
 
 			@Override
 			public void handle(ActionEvent event) {
-				name = nameTextField.getText().trim(); 
+				name = nameTextField.getText().trim();
 				if (!name.isEmpty()) {
 					GameController gameController = new GameController(name);
 					gameController.startGame();
-				}else {
+				} else {
 					Alert alert = new Alert(AlertType.INFORMATION);
-			        alert.setTitle("Information Dialog");
-			        alert.setHeaderText(null);
-			        alert.setContentText("Enter your Name!");
+					alert.setTitle("Information Dialog");
+					alert.setHeaderText(null);
+					alert.setContentText("Enter your Name!");
 
-			        alert.showAndWait();
+					alert.showAndWait();
 				}
 			}
 		});
@@ -150,6 +155,17 @@ public class MenuScene {
 		startGameLabel.setLayoutY(25);
 		rulesSubScene.getPane().getChildren().add(startGameLabel);
 		rulesSubScene.getPane().getChildren().add(createTextboxForRules());
+
+	}
+
+	private void createControlsSubScene() {
+		controlSubscene = new MenuSubScene();
+		mainPane.getChildren().add(controlSubscene);
+		StartGameLabel startGameLabel = new StartGameLabel("CONTROLS");
+		startGameLabel.setLayoutX(110);
+		startGameLabel.setLayoutY(25);
+		controlSubscene.getPane().getChildren().add(startGameLabel);
+		controlSubscene.getPane().getChildren().add(createTextboxForControls());
 
 	}
 
@@ -194,7 +210,7 @@ public class MenuScene {
 		TextArea rulesTextArea = new TextArea();
 		rulesTextArea.setEditable(false);
 		rulesTextArea.setPrefSize(430, 250);
-		rulesTextArea.setStyle("-fx-font-family: 'Monotype Corsiva'; -fx-font-size: 12; -fx-font-weight: bold;");
+		rulesTextArea.setStyle("-fx-font-family: 'Cambria'; -fx-font-size: 11; -fx-font-weight: bold;");
 
 		try {
 			File scoresFile = new File("src/resources/rules.txt");
@@ -207,12 +223,33 @@ public class MenuScene {
 			e.printStackTrace();
 		}
 
-		// Show the ruleSubscene with the TextArea containing the scores
 		HBox rulesBox = new HBox(rulesTextArea);
 		scoreSubscene.setRoot(rulesBox);
 		rulesBox.setLayoutX(100);
 		rulesBox.setLayoutY(100);
 		return rulesBox;
+	}
+
+	private Node createTextboxForControls() {
+		TextArea controlsTextArea = new TextArea();
+		controlsTextArea.setEditable(false);
+		controlsTextArea.setPrefSize(400, 250);
+		controlsTextArea.setFont(Font.font("Cambria", FontWeight.BOLD, 12));
+		try {
+			File scoresFile = new File("src/resources/controls.txt");
+			Scanner scanner = new Scanner(scoresFile);
+			while (scanner.hasNextLine()) {
+				controlsTextArea.appendText(scanner.nextLine() + "\n");
+			}
+			scanner.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		HBox scoreBox = new HBox(controlsTextArea);
+		scoreBox.setLayoutX(100);
+		scoreBox.setLayoutY(100);
+		return scoreBox;
 	}
 
 	public Stage getMainStage() {
@@ -226,10 +263,12 @@ public class MenuScene {
 		mainPane.getChildren().add(button);
 	}
 
+	// Create button for menu screen
 	private void CreateButtons() {
 		createStartButton();
 		createScoresButton();
 		createRulesButton();
+		createControlsButton();
 		createExitButton();
 	}
 
@@ -263,10 +302,10 @@ public class MenuScene {
 
 	private void createRulesButton() {
 
-		MenuButtonFeature creditsButton = new MenuButtonFeature("RULES");
-		AddMenuButtons(creditsButton);
+		MenuButtonFeature rulesButton = new MenuButtonFeature("RULES");
+		AddMenuButtons(rulesButton);
 
-		creditsButton.setOnAction(new EventHandler<ActionEvent>() {
+		rulesButton.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent event) {
@@ -274,6 +313,21 @@ public class MenuScene {
 
 			}
 		});
+	}
+
+	private void createControlsButton() {
+		MenuButtonFeature controlsButton = new MenuButtonFeature("CONTROLS");
+		AddMenuButtons(controlsButton);
+
+		controlsButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				showSubScene(controlSubscene);
+
+			}
+		});
+
 	}
 
 	private void createExitButton() {

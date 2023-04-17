@@ -41,30 +41,31 @@ import model.Score;
 import model.Size;
 
 public class GameController {
+	
+	// All constant declaration
 	public static final int WIDTH = 1024;
 	public static final int HEIGHT = 768;
-	private Stage stage;
-	private Pane pane = new Pane();
-	private AnchorPane gamePane;
-	private Scene scene;
-	private MediaPlayer mediaPlayer;
-	private Label livesLabel = new Label("");
-	private Label levelLabel = new Label("");
-	private Label scoreText = new Label("");
 	private final static String BACKGROUND_IMAGE = "/resources/space.gif";
 	private final static String MUSICPATH = "src/resources/music.mp3";
 	public final static String SCORE_FILE_PATH = "/resources/scores.txt";
-	private Label timerLabel;
-	private Timeline timeline;
+	
+	private Stage stage;
+	private AnchorPane gamePane;
+	private Scene scene;
+	private MediaPlayer mediaPlayer;
 	private int level = 0;
-	private List<Asteroid> asteroids = new ArrayList<>();
-	private int score = 0; // added score variable
+	private int score = 0;
 	private String name = "";
-
+	
+    //All instanstiation
+	private List<Asteroid> asteroids = new ArrayList<>();
 	HighScoresList scorelist = new HighScoresList();
 	Score championScore = new Score(name, score);
 	MenuScene menuScene = new MenuScene();
-
+	Label levelLabel = new Label();
+	Pane pane = new Pane();
+   
+	//Parameterized constructor with parameter name
 	public GameController(String name) {
 		initializeStage();
 		this.name = name;
@@ -106,31 +107,10 @@ public class GameController {
 	}
 
 	private void showGameOverScreen() {
-		/*
-		 * Text gameOverText = new Text("GAME OVER"); gameOverText.setLayoutX(WIDTH / 2
-		 * - 50); gameOverText.setLayoutY(HEIGHT / 2);
-		 * pane.getChildren().add(gameOverText);
-		 * 
-		 * Button playAgainButton = new Button("PLAY AGAIN?");
-		 * playAgainButton.setLayoutX(WIDTH / 2 - 40); playAgainButton.setLayoutY(HEIGHT
-		 * / 2 + 30); playAgainButton.setOnAction(e -> {
-		 * pane.getChildren().remove(gameOverText);
-		 * pane.getChildren().remove(playAgainButton); restartGame(); });
-		 * pane.getChildren().add(playAgainButton);
-		 */
 		stage.close();
 		mediaPlayer.stop();
 		createGameOverStage();
-
 	}
-
-	/*private void restartGame() {
-		stage.close();
-		GameController newGameController = new GameController(name);
-		newGameController.startGame();
-		PlayerShip.resetLives(); // Add this line to reset lives
-
-	}*/
 
 	List<EnemyShip> enemyShips = new ArrayList<>();
 
@@ -419,28 +399,30 @@ public class GameController {
 			}
 
 			/**
-             * Method for splitting an asteroid into two asteroids and increasing score if appropriate
-             *
-             * @param asteroid The asteroid that might need to be split.
-             * @param otherCharacter the character colliding with the asteroid
-             */
-            private void splitAsteroids(Asteroid asteroid, Character otherCharacter) {
+			 * Method for splitting an asteroid into two asteroids and increasing score if
+			 * appropriate
+			 *
+			 * @param asteroid       The asteroid that might need to be split.
+			 * @param otherCharacter the character colliding with the asteroid
+			 */
+			private void splitAsteroids(Asteroid asteroid, Character otherCharacter) {
 
-                if (otherCharacter instanceof Bullet && ((Bullet) otherCharacter).isFriendly()) {
-                    // Add points to the score based on asteroid size
-                    score += asteroid.getSize().points();
-                    scoreText.setText("Score: " + score); // Update score text
-                }
+				if (otherCharacter instanceof Bullet && ((Bullet) otherCharacter).isFriendly()) {
+					// Add points to the score based on asteroid size
+					score += asteroid.getSize().points();
+					scoreText.setText("Score: " + score); // Update score text
+				}
 
-                if (asteroid.getSize().ordinal() < Size.values().length - 1) {
-                    for (int i = 0; i < 2; i++) {
-                        Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
-                                (int) asteroid.getCharacter().getTranslateY(), Size.values()[asteroid.getSize().ordinal() + 1]);
-                        asteroids.add(newAsteroid);
-                        pane.getChildren().add(newAsteroid.getCharacter());
-                    }
-                }
-            }
+				if (asteroid.getSize().ordinal() < Size.values().length - 1) {
+					for (int i = 0; i < 2; i++) {
+						Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
+								(int) asteroid.getCharacter().getTranslateY(),
+								Size.values()[asteroid.getSize().ordinal() + 1]);
+						asteroids.add(newAsteroid);
+						pane.getChildren().add(newAsteroid.getCharacter());
+					}
+				}
+			}
 
 			/**
 			 * Checks and handles collisions between characters.
@@ -547,7 +529,7 @@ public class GameController {
 
 		championScore.setName(name);
 		championScore.setScore(score);
-		
+
 		scorelist.addScore(championScore);
 		System.out.println("Score is: " + scorelist);
 
@@ -565,7 +547,5 @@ public class GameController {
 
 			}
 		});
-
 	}
-
 }
