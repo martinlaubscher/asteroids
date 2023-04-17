@@ -57,7 +57,12 @@ public class PlayerShip extends Ship {
 	public void setInvulnerabilityEndTime(long invulnerabilityEndTime) {
 		this.invulnerabilityEndTime = invulnerabilityEndTime;
 	}
-
+	
+	public int getInvulnerabilityTimeLeft(){
+        int timeLeft = (int) ((this.invulnerabilityEndTime - System.nanoTime())/1_000_000_000L);
+        return Math.max(timeLeft, 0);
+    	}
+	
 	public boolean isInvulnerable() {
 		return System.nanoTime() <= invulnerabilityEndTime;
 	}
