@@ -1,0 +1,7 @@
+The player's ship can perform 4 actions:
+
+RIGHT ARROW (→): Rotate the ship in the clockwise direction.
+LEFT ARROW (←): Rotate the ship in the anti-clockwise direction.
+SPACE BAR (_): Fire a bullet.
+UP ARROW (↑): Add speed to the current motion.
+
