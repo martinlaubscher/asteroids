@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
@@ -31,6 +33,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.application.Platform;
 import model.Asteroid;
 import model.Bullet;
 import model.Character;
@@ -166,7 +169,13 @@ public class GameController {
 		scoreText.setTranslateX(10);
 		scoreText.setTranslateY(90);
 		pane.getChildren().add(scoreText);
-
+		
+		Label invulnerabilityLabel = new Label("");
+		invulnerabilityLabel.setTextFill(Color.WHITE);
+        	invulnerabilityLabel.setFont(Font.font("Chiller", FontWeight.BOLD, 24));
+        	invulnerabilityLabel.setTranslateX(WIDTH/2 - 150);
+        	invulnerabilityLabel.setTranslateY(10);
+		
 		// list storing all (active) bullets
 		List<Bullet> bullets = new ArrayList<>();
 
@@ -453,6 +462,21 @@ public class GameController {
 									} else {
 										livesLabel.setText("Lives: " + playerShip.getLives());
 									}
+									
+									invulnerabilityLabel.setText("Invulnerability Countdown:" + playerShip.getInvulnerabilityTimeLeft() + "s");
+                                    					pane.getChildren().add(invulnerabilityLabel);
+
+									Timer timer = new Timer();
+									timer.schedule(new TimerTask() {
+										public void run(){
+											if (!playerShip.isInvulnerable()){
+												Platform.runLater(() ->pane.getChildren().remove(invulnerabilityLabel));
+												timer.cancel();
+											} else {
+												Platform.runLater(()->invulnerabilityLabel.setText("Invulnerability Countdown: " + playerShip.getInvulnerabilityTimeLeft() + "s"));
+											}
+										}
+									},0,1000);
 								}
 							}
 							// Collision handling for enemy ships
