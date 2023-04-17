@@ -398,7 +398,7 @@ public class GameController {
 			 * 
 			 * @param list The list of characters to check.
 			 */
-			private <Temp extends Character> void hearse(List<Temp> list) {
+			private <T extends Character> void hearse(List<T> list) {
 				list.stream().filter(character -> !character.isAlive())
 						.forEach(character -> pane.getChildren().remove(character.getCharacter()));
 
@@ -419,39 +419,28 @@ public class GameController {
 			}
 
 			/**
-			 * Method for splitting an asteroid into two asteroids
-			 * 
-			 * @param asteroid The asteroid that might need to be split.
-			 */
-			public void splitAsteroids(Asteroid asteroid) {
-				// Add points to the score based on asteroid size
-				if (asteroid.getSize() == Size.LARGE) {
-					score += 20;
-				} else if (asteroid.getSize() == Size.MEDIUM) {
-					score += 50;
-				} else if (asteroid.getSize() == Size.SMALL) {
-					score += 100;
-				}
+             * Method for splitting an asteroid into two asteroids and increasing score if appropriate
+             *
+             * @param asteroid The asteroid that might need to be split.
+             * @param otherCharacter the character colliding with the asteroid
+             */
+            private void splitAsteroids(Asteroid asteroid, Character otherCharacter) {
 
-				scoreText.setText("Score: " + score); // Update score text
+                if (otherCharacter instanceof Bullet && ((Bullet) otherCharacter).isFriendly()) {
+                    // Add points to the score based on asteroid size
+                    score += asteroid.getSize().points();
+                    scoreText.setText("Score: " + score); // Update score text
+                }
 
-				if (asteroid.getSize() == Size.LARGE) {
-					for (int i = 0; i < 2; i++) {
-						Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
-								(int) asteroid.getCharacter().getTranslateY(), Size.MEDIUM);
-						asteroids.add(newAsteroid);
-						pane.getChildren().add(newAsteroid.getCharacter());
-					}
-				} else if (asteroid.getSize() == Size.MEDIUM) {
-					for (int i = 0; i < 2; i++) {
-						Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
-								(int) asteroid.getCharacter().getTranslateY(), Size.SMALL);
-						asteroids.add(newAsteroid);
-						pane.getChildren().add(newAsteroid.getCharacter());
-					}
-				}
-				asteroid.setAlive(false);
-			}
+                if (asteroid.getSize().ordinal() < Size.values().length - 1) {
+                    for (int i = 0; i < 2; i++) {
+                        Asteroid newAsteroid = new Asteroid((int) asteroid.getCharacter().getTranslateX(),
+                                (int) asteroid.getCharacter().getTranslateY(), Size.values()[asteroid.getSize().ordinal() + 1]);
+                        asteroids.add(newAsteroid);
+                        pane.getChildren().add(newAsteroid.getCharacter());
+                    }
+                }
+            }
 
 			/**
 			 * Checks and handles collisions between characters.
@@ -496,7 +485,7 @@ public class GameController {
 								// Ignoring collisions with other asteroids
 								if (!(otherCharacter instanceof Asteroid)) {
 									character.setAlive(false);
-									splitAsteroids((Asteroid) character);
+									splitAsteroids((Asteroid) character, otherCharacter);
 								}
 							}
 							// Collision handling for bullets
@@ -557,9 +546,8 @@ public class GameController {
 		instruction.setFont(Font.font("Chiller", FontWeight.BOLD, 40));
 
 		championScore.setName(name);
-		;
 		championScore.setScore(score);
-		;
+		
 		scorelist.addScore(championScore);
 		System.out.println("Score is: " + scorelist);
 
