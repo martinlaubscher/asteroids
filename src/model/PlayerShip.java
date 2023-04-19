@@ -22,7 +22,7 @@ public class PlayerShip extends Ship {
 		return lives;
 	}
 
-	private final void setLives(int lives) {
+	public final void setLives(int lives) {
 		PlayerShip.lives = lives;
 	}
 
