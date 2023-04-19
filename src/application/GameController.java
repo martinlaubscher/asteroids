@@ -11,6 +11,7 @@ import java.util.TimerTask;
 
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -64,8 +65,11 @@ public class GameController {
     private MediaPlayer mediaPlayer;
     private int level = 0;
     private int score = 0;
+    private int lastLifeGainScore = 0;
     private String name = "";
     Score championScore = new Score(name, score);
+    private boolean isPaused = false;
+    private Label pauseIcon;
     // All instanstiation
     private List<Asteroid> asteroids = new ArrayList<>();
     private List<Bullet> bullets = new ArrayList<>();
@@ -120,6 +124,37 @@ public class GameController {
         mediaPlayer.stop();
         createGameOverStage();
     }
+
+    // Adds a life to the player if they score 5000 points (stacking)
+    private void checkLifeGain() {
+        if (score - lastLifeGainScore >= 5000) {
+            playerShip.setLives(playerShip.getLives() + 1);
+            lastLifeGainScore = score;
+            updateLivesLabel(); // Update the livesLabel
+            showLifeGainMessage();
+        }
+    }
+    
+    // Displays a short message indicating that +1 life has been gained following 5000 scoring 
+    private void showLifeGainMessage() {
+        Label lifeGainMessage = new Label("5000 Points Scored + 1 Life!");
+        lifeGainMessage.setTextFill(Color.WHITE);
+        lifeGainMessage.setFont(Font.font("Chiller", FontWeight.BOLD, 24));
+        lifeGainMessage.setTranslateX(WIDTH / 2 - 150);
+        lifeGainMessage.setTranslateY(50);
+    
+        pane.getChildren().add(lifeGainMessage);
+    
+        PauseTransition pause = new PauseTransition(Duration.seconds(3));
+        pause.setOnFinished(event -> pane.getChildren().remove(lifeGainMessage));
+        pause.play();
+    }
+
+    // Updates Life label in case a life if gained
+    private void updateLivesLabel() {
+        livesLabel.setText("Lives: " + playerShip.getLives());
+    }
+
 
     private void spawnEnemyShips() {
         Timeline enemyShipSpawner = new Timeline(new KeyFrame(Duration.seconds(10)), // wait 10 seconds before spawning
@@ -291,11 +326,13 @@ public class GameController {
                                 Timer timer = new Timer();
                                 timer.schedule(new TimerTask() {
                                     public void run() {
-                                        if (!playerShip.isInvulnerable()) {
-                                            Platform.runLater(() -> pane.getChildren().remove(invulnerabilityLabel));
-                                            timer.cancel();
-                                        } else {
-                                            Platform.runLater(() -> invulnerabilityLabel.setText("Invulnerability Countdown: " + playerShip.getInvulnerabilityTimeLeft() + "s"));
+                                        if (!isPaused) {
+                                            if (!playerShip.isInvulnerable()) {
+                                                Platform.runLater(() -> pane.getChildren().remove(invulnerabilityLabel));
+                                                timer.cancel();
+                                            } else {
+                                                Platform.runLater(() -> invulnerabilityLabel.setText("Invulnerability Countdown: " + playerShip.getInvulnerabilityTimeLeft() + "s"));
+                                            }
                                         }
                                     }
                                 }, 0, 1000);
@@ -384,6 +421,16 @@ public class GameController {
         invulnerabilityLabel.setTranslateX(WIDTH / 2 - 150);
         invulnerabilityLabel.setTranslateY(10);
 
+        pauseIcon = new Label("||");
+        pauseIcon.setTextFill(Color.WHITE);
+        pauseIcon.setFont(Font.font("Arial", FontWeight.BOLD, 80));
+        pauseIcon.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
+            pauseIcon.setTranslateX((pane.getWidth() - newValue.getWidth()) / 2);
+            pauseIcon.setTranslateY((pane.getHeight() - newValue.getHeight()) / 2);
+        });
+        pauseIcon.setVisible(false);
+        pane.getChildren().add(pauseIcon);
+
         // For level i, creates i large asteroids at the beginning
         for (int i = 0; i < currentLevel; i++) {
             Random rnd = new Random();
@@ -406,10 +453,19 @@ public class GameController {
         Map<KeyCode, Boolean> pressedKeys = new HashMap<>();
 
         scene.setOnKeyPressed(event -> {
-            pressedKeys.put(event.getCode(), Boolean.TRUE);
+            if (event.getCode() == KeyCode.P) {
+                isPaused = !isPaused;
+                pauseIcon.setVisible(isPaused);
+            }
+            if (!isPaused) {
+                pressedKeys.put(event.getCode(), Boolean.TRUE);
+            }
         });
+        
         scene.setOnKeyReleased(event -> {
-            pressedKeys.put(event.getCode(), Boolean.FALSE);
+            if (!isPaused) {
+                pressedKeys.put(event.getCode(), Boolean.FALSE);
+            }
         });
 
         animationTimer = new AnimationTimer() {
@@ -420,6 +476,7 @@ public class GameController {
 
             @Override
             public void handle(long now) {
+                if (!isPaused) {
                 if (pressedKeys.getOrDefault(KeyCode.H, false)) {
                     hyperspaceJump(playerShip, asteroids, enemyShips);
                 }
@@ -495,6 +552,8 @@ public class GameController {
                     // update timestamp when last bullet was fired
                     lastPlayerBullet = now;
                 }
+                // Check for +1 life gain if 5000 points have been scored (stacking)
+                checkLifeGain(); 
 
                 // calling method to update bullet position, distance travelled, and remove
                 // bullets if exceeding MAXDIST
@@ -512,7 +571,7 @@ public class GameController {
                 // Check if all asteroids are destroyed and spawn new ones if needed
                 spawnAsteroidsIfNone();
 
-            }
+            }}
         };
         animationTimer.start();
     }
