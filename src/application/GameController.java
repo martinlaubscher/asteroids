@@ -239,12 +239,12 @@ public class GameController {
         bullets.forEach(Character::move);
 
         // update distance travelled
-        bullets.forEach(Bullet::setDist);
+        bullets.forEach(Bullet::setDistance);
 
         // removing bullets that have exceeded MAXDIST
-        bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMaxdist())
+        bullets.stream().filter(bullet -> bullet.getDistance() > Bullet.getMaxDistance())
                 .forEach(bullet -> pane.getChildren().remove(bullet.getCharacter()));
-        bullets.removeAll(bullets.stream().filter(bullet -> bullet.getDist() > Bullet.getMaxdist()).toList());
+        bullets.removeAll(bullets.stream().filter(bullet -> bullet.getDistance() > Bullet.getMaxDistance()).toList());
     }
 
     /**
@@ -481,11 +481,6 @@ public class GameController {
         });
 
         animationTimer = new AnimationTimer() {
-            // timestamps recording when the last bullet was fired - used to avoid fire rate
-            // being too high
-            private long lastPlayerBullet = 0;
-            private long lastEnemyBullet = 0;
-
             @Override
             public void handle(long now) {
                 if (!isPaused) {
@@ -506,6 +501,14 @@ public class GameController {
                 }
                 playerShip.move();
 
+                // if space is pressed and enough time has passed since the last bullet was
+                // fired, spawn new bullet based on player ship's location/rotation
+                if (pressedKeys.getOrDefault(KeyCode.SPACE, false) && now - playerShip.getLastBullet() > 300_000_000) {
+                    Bullet bullet = playerShip.fire(now);
+                    bullets.add(bullet);
+                    pane.getChildren().add(bullet.getCharacter());
+                }
+
                 asteroids.forEach(Asteroid::move);
                 enemyShips.forEach(enemyShip -> {
                     long currentTime = System.nanoTime();
@@ -519,56 +522,17 @@ public class GameController {
                 // enemy ship fire
                 enemyShips.forEach(EnemyShip -> {
                     // if the enemy ship is alive, shoot a bullet every 10 seconds
-                    if (EnemyShip.isAlive() && now - lastEnemyBullet > 10_000_000_000L) {
-                        Bullet bullet = new Bullet((int) EnemyShip.getCharacter().getTranslateX(),
-                                (int) EnemyShip.getCharacter().getTranslateY(), false);
-
-                        // calculate the direction to fire in - 'target' represents a vector pointing
-                        // from the enemy ship to the player ship
-                        double targetX = playerShip.getCharacter().getTranslateX()
-                                - EnemyShip.getCharacter().getTranslateX();
-                        double targetY = playerShip.getCharacter().getTranslateY()
-                                - EnemyShip.getCharacter().getTranslateY();
-                        Point2D target = new Point2D(targetX, targetY);
-
+                    if (EnemyShip.isAlive() && now - EnemyShip.getLastBullet() > 10_000_000_000L) {
+                        Bullet bullet = EnemyShip.fire(playerShip, now);
                         bullets.add(bullet);
-
-                        // send bullet on its path
-                        bullet.accelerate();
-                        bullet.setMovement(target.normalize().multiply(Bullet.getSpeed()));
-
                         pane.getChildren().add(bullet.getCharacter());
-
-                        // update timestamp when last bullet was fired
-                        lastEnemyBullet = now;
                     }
                 });
 
-                // if space is pressed and enough time has passed since the last bullet was
-                // fired, spawn new bullet based on player ship's location/rotation
-                if (pressedKeys.getOrDefault(KeyCode.SPACE, false) && now - lastPlayerBullet > 200_000_000) {
-                    Bullet bullet = new Bullet((int) playerShip.getCharacter().getTranslateX(),
-                            (int) playerShip.getCharacter().getTranslateY(), true);
-                    bullet.getCharacter().setRotate(playerShip.getCharacter().getRotate());
-                    bullets.add(bullet);
-
-                    // accelerate bullet
-                    bullet.accelerate();
-                    // move bullet based on ship's rotation
-                    bullet.setMovement(bullet.getMovement().normalize().multiply(Bullet.getSpeed()));
-                    // add ship's momentum to bullet trajectory
-                    bullet.setMovement(bullet.getMovement().add(playerShip.getMovement()));
-
-                    pane.getChildren().add(bullet.getCharacter());
-
-                    // update timestamp when last bullet was fired
-                    lastPlayerBullet = now;
-                }
-                // Check for +1 life gain if 5000 points have been scored (stacking)
-                checkLifeGain(); 
+                checkLifeGain();
 
                 // calling method to update bullet position, distance travelled, and remove
-                // bullets if exceeding MAXDIST
+                // bullets if exceeding maximum distance
                 updateBullets();
 
                 // calling method to repopulate list with active characters
