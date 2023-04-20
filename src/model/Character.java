@@ -61,7 +61,12 @@ public abstract class Character {
 		changeX *= 0.05;
 		changeY *= 0.05;
 
-		this.movement = this.movement.add(changeX, changeY);
+		Point2D newMovement = this.movement.add(changeX, changeY);
+
+        // Call the isSpeedWithinLimit() method to check if the speed is within the limit
+        if (isSpeedWithinLimit(newMovement)) {
+            this.movement = newMovement;
+        }
 	}
 
 	public void decelerate() {
@@ -94,4 +99,8 @@ public abstract class Character {
 	public Boolean isAlive() {
 		return this.alive;
 	}
+
+	protected boolean isSpeedWithinLimit(Point2D newMovement) {
+        return true; // For the base Character class, always return true
+    }
 }
