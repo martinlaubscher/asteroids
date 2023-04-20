@@ -559,8 +559,8 @@ public class GameController {
     public void playBackgroundSound() {
         Media sound = new Media(Paths.get(MUSICPATH).toUri().toString());
         mediaPlayer = new MediaPlayer(sound);
+        mediaPlayer.setOnEndOfMedia(() -> mediaPlayer.seek(Duration.ZERO));
         mediaPlayer.play();
-
     }
 
     private void createBackground() {
