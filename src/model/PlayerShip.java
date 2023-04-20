@@ -7,6 +7,7 @@ public class PlayerShip extends Ship {
 	private static int lives;
 	private Boolean safelySpawned;
 	private long invulnerabilityEndTime; // Add invulnerabilityEndTime variable
+	public static final double MAX_SPEED = 5.0;
 
 	public static void resetLives() {
 		lives = 3;
@@ -66,4 +67,9 @@ public class PlayerShip extends Ship {
 	public boolean isInvulnerable() {
 		return System.nanoTime() <= invulnerabilityEndTime;
 	}
+
+	protected boolean isSpeedWithinLimit(Point2D newMovement) {
+        // Check if the new speed is within the limit
+        return newMovement.magnitude() <= MAX_SPEED;
+    }
 }
