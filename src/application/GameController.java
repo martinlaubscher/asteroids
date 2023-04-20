@@ -11,6 +11,7 @@ import java.util.TimerTask;
 
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -64,8 +65,15 @@ public class GameController {
     private MediaPlayer mediaPlayer;
     private int level = 0;
     private int score = 0;
+    private int lastLifeGainScore = 0;
     private String name = "";
     Score championScore = new Score(name, score);
+    private boolean isPaused = false;
+    private Label pauseIcon;
+    private Font labelFont;
+    private Font smallerLabelFont;
+    private final Color labelColor = Color.web("#FFD700"); // golden color
+
     // All instanstiation
     private List<Asteroid> asteroids = new ArrayList<>();
     private List<Bullet> bullets = new ArrayList<>();
@@ -76,9 +84,10 @@ public class GameController {
 
     // Parameterized constructor with parameter name
     public GameController(String name) {
-        initializeStage();
         this.name = name;
-
+        labelFont = Font.loadFont(getClass().getResourceAsStream("/resources/PressStart2P-Regular.ttf"), 24);
+        smallerLabelFont = Font.loadFont(getClass().getResourceAsStream("/resources/PressStart2P-Regular.ttf"), 18);
+        initializeStage();
     }
 
     public static int randomX() {
@@ -121,14 +130,49 @@ public class GameController {
         createGameOverStage();
     }
 
+    // Adds a life to the player if they score 1000 points (stacking)
+    private void checkLifeGain() {
+        if (score - lastLifeGainScore >= 1000) {
+            playerShip.setLives(playerShip.getLives() + 1);
+            lastLifeGainScore = score;
+            updateLivesLabel(); // Update the livesLabel
+            showLifeGainMessage();
+        }
+    }
+    
+    // Displays a short message indicating that +1 life has been gained following 1000 scoring (for demo purpose)
+    private void showLifeGainMessage() {
+        Label lifeGainMessage = new Label("1000 Points Scored + 1 Life!");
+        lifeGainMessage.setTextFill(labelColor);
+        lifeGainMessage.setFont(smallerLabelFont);
+        lifeGainMessage.setMinWidth(WIDTH);
+        lifeGainMessage.setAlignment(Pos.CENTER);
+        lifeGainMessage.setTranslateY(50);
+    
+        pane.getChildren().add(lifeGainMessage);
+    
+        PauseTransition pause = new PauseTransition(Duration.seconds(3));
+        pause.setOnFinished(event -> pane.getChildren().remove(lifeGainMessage));
+        pause.play();
+    }
+
+
+    // Updates Life label in case a life if gained
+    private void updateLivesLabel() {
+        livesLabel.setText("Lives: " + playerShip.getLives());
+    }
+
+
     private void spawnEnemyShips() {
         Timeline enemyShipSpawner = new Timeline(new KeyFrame(Duration.seconds(10)), // wait 10 seconds before spawning
                 // first enemy ship
                 new KeyFrame(Duration.seconds(20), event -> {
-                    Random rnd = new Random();
-                    EnemyShip enemyShip = new EnemyShip(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT));
-                    pane.getChildren().add(enemyShip.getCharacter());
-                    enemyShips.add(enemyShip);
+                    if (!isPaused) {
+                        Random rnd = new Random();
+                        EnemyShip enemyShip = new EnemyShip(rnd.nextInt(WIDTH), rnd.nextInt(HEIGHT));
+                        pane.getChildren().add(enemyShip.getCharacter());
+                        enemyShips.add(enemyShip);
+                    }
                 }));
         enemyShipSpawner.setCycleCount(Timeline.INDEFINITE);
         enemyShipSpawner.play();
@@ -291,11 +335,13 @@ public class GameController {
                                 Timer timer = new Timer();
                                 timer.schedule(new TimerTask() {
                                     public void run() {
-                                        if (!playerShip.isInvulnerable()) {
-                                            Platform.runLater(() -> pane.getChildren().remove(invulnerabilityLabel));
-                                            timer.cancel();
-                                        } else {
-                                            Platform.runLater(() -> invulnerabilityLabel.setText("Invulnerability Countdown: " + playerShip.getInvulnerabilityTimeLeft() + "s"));
+                                        if (!isPaused) {
+                                            if (!playerShip.isInvulnerable()) {
+                                                Platform.runLater(() -> pane.getChildren().remove(invulnerabilityLabel));
+                                                timer.cancel();
+                                            } else {
+                                                Platform.runLater(() -> invulnerabilityLabel.setText("Invulnerability Countdown: " + playerShip.getInvulnerabilityTimeLeft() + "s"));
+                                            }
                                         }
                                     }
                                 }, 0, 1000);
@@ -358,31 +404,44 @@ public class GameController {
         pane.getChildren().add(playerShip.getCharacter());
 
         livesLabel = new Label("Lives: " + playerShip.getLives());
-        livesLabel.setTextFill(Color.WHITE);
-        livesLabel.setFont(Font.font("Chiller", FontWeight.BOLD, 24));
+        livesLabel.setTextFill(labelColor);
+        livesLabel.setFont(labelFont);
         livesLabel.setTranslateX(10);
         livesLabel.setTranslateY(10);
         pane.getChildren().add(livesLabel);
 
         levelLabel = new Label("Level: " + currentLevel);
-        levelLabel.setTextFill(Color.WHITE);
-        levelLabel.setFont(Font.font("Chiller", FontWeight.BOLD, 24));
+        levelLabel.setTextFill(labelColor);
+        levelLabel.setFont(labelFont);
         levelLabel.setTranslateX(10);
         levelLabel.setTranslateY(50);
         pane.getChildren().add(levelLabel);
 
         scoreText = new Label("Score: " + score);
-        scoreText.setTextFill(Color.WHITE);
-        scoreText.setFont(Font.font("Chiller", FontWeight.BOLD, 24));
+        scoreText.setTextFill(labelColor);
+        scoreText.setFont(labelFont);
         scoreText.setTranslateX(10);
         scoreText.setTranslateY(90);
         pane.getChildren().add(scoreText);
 
+
         invulnerabilityLabel = new Label("");
-        invulnerabilityLabel.setTextFill(Color.WHITE);
-        invulnerabilityLabel.setFont(Font.font("Chiller", FontWeight.BOLD, 24));
-        invulnerabilityLabel.setTranslateX(WIDTH / 2 - 150);
+        invulnerabilityLabel.setTextFill(labelColor);
+        invulnerabilityLabel.setFont(smallerLabelFont);
+        invulnerabilityLabel.setMinWidth(WIDTH);
+        invulnerabilityLabel.setAlignment(Pos.CENTER);
         invulnerabilityLabel.setTranslateY(10);
+
+
+        pauseIcon = new Label("||");
+        pauseIcon.setTextFill(Color.WHITE);
+        pauseIcon.setFont(Font.font("Arial", FontWeight.BOLD, 80));
+        pauseIcon.layoutBoundsProperty().addListener((observable, oldValue, newValue) -> {
+            pauseIcon.setTranslateX((pane.getWidth() - newValue.getWidth()) / 2);
+            pauseIcon.setTranslateY((pane.getHeight() - newValue.getHeight()) / 2);
+        });
+        pauseIcon.setVisible(false);
+        pane.getChildren().add(pauseIcon);
 
         // For level i, creates i large asteroids at the beginning
         for (int i = 0; i < currentLevel; i++) {
@@ -406,10 +465,19 @@ public class GameController {
         Map<KeyCode, Boolean> pressedKeys = new HashMap<>();
 
         scene.setOnKeyPressed(event -> {
-            pressedKeys.put(event.getCode(), Boolean.TRUE);
+            if (event.getCode() == KeyCode.P) {
+                isPaused = !isPaused;
+                pauseIcon.setVisible(isPaused);
+            }
+            if (!isPaused) {
+                pressedKeys.put(event.getCode(), Boolean.TRUE);
+            }
         });
+        
         scene.setOnKeyReleased(event -> {
-            pressedKeys.put(event.getCode(), Boolean.FALSE);
+            if (!isPaused) {
+                pressedKeys.put(event.getCode(), Boolean.FALSE);
+            }
         });
 
         animationTimer = new AnimationTimer() {
@@ -420,6 +488,7 @@ public class GameController {
 
             @Override
             public void handle(long now) {
+                if (!isPaused) {
                 if (pressedKeys.getOrDefault(KeyCode.H, false)) {
                     hyperspaceJump(playerShip, asteroids, enemyShips);
                 }
@@ -495,6 +564,8 @@ public class GameController {
                     // update timestamp when last bullet was fired
                     lastPlayerBullet = now;
                 }
+                // Check for +1 life gain if 5000 points have been scored (stacking)
+                checkLifeGain(); 
 
                 // calling method to update bullet position, distance travelled, and remove
                 // bullets if exceeding MAXDIST
@@ -512,7 +583,7 @@ public class GameController {
                 // Check if all asteroids are destroyed and spawn new ones if needed
                 spawnAsteroidsIfNone();
 
-            }
+            }}
         };
         animationTimer.start();
     }
@@ -542,17 +613,24 @@ public class GameController {
                 BackgroundRepeat.REPEAT, BackgroundPosition.DEFAULT, null);
         pane.setBackground(new Background(background));
 
-        Label gameOverLabel = new Label("Game Over!!! Well Played " + name + " ");
+        // Game Over labels
+        Label gameOverLabel = new Label("Game Over! Well Played " + name + " ");
         gameOverLabel.setTextFill(Color.RED);
-        gameOverLabel.setFont(Font.font("Chiller", FontWeight.BOLD, 58));
+        gameOverLabel.setFont(labelFont);
+        gameOverLabel.setMinWidth(WIDTH);
+        gameOverLabel.setAlignment(Pos.CENTER);
 
         Label scoreLabel = new Label("Total Score: " + score);
         scoreLabel.setTextFill(Color.RED);
-        scoreLabel.setFont(Font.font("Chiller", FontWeight.BOLD, 40));
+        scoreLabel.setFont(labelFont);
+        scoreLabel.setMinWidth(WIDTH);
+        scoreLabel.setAlignment(Pos.CENTER);
 
         Label instruction = new Label("Press Enter to continue");
         instruction.setTextFill(Color.WHITE);
-        instruction.setFont(Font.font("Chiller", FontWeight.BOLD, 40));
+        instruction.setFont(labelFont);
+        instruction.setMinWidth(WIDTH);
+        instruction.setAlignment(Pos.CENTER);
 
         championScore.setName(name);
         championScore.setScore(score);
