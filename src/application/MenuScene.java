@@ -193,7 +193,7 @@ public class MenuScene {
 
 	private TextField createTextboxForName() {
 		TextField nameField = new TextField();
-		nameField.setPromptText("Enter your name");
+		nameField.setPromptText("your name");
 		nameField.setFont(Font.font("Cambria", FontWeight.BOLD, 28));
 		nameField.setLayoutX(100);
 		nameField.setLayoutY(150);
